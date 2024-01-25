@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "animevisualised"
+version = "0.1.0"
+description = "A website to make beautiful and insightful graphs on your anime lists."
+authors = ["Shravan Asati <dev.shravan@protonmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+flask = "^3.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
