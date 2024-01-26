@@ -1,0 +1,44 @@
+<html lang="en">
+
+<head>
+	{% block head %}
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title> {% block title %} {% endblock %} </title>
+
+	<!-- stylesheets -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+	<link rel="stylesheet" href="{{ url_for('static', filename='styles/main.css') }}">
+
+	{% endblock %}
+</head>
+
+<body>
+	<!-- navbar -->
+	{%block header%}
+	<nav>
+		<ul>
+			<li><strong><a href="/"  class="no-color-link">AnimeVisualised</a></strong></li>
+			<li><a href="https://github.com/shravanasati/animevisualised" class="no-color-link">GitHub</a></li>
+		</ul>
+		<ul>
+			<li><a href="/login" role="button" class="btn">Login with MAL</a></li>
+		</ul>
+	</nav>
+	{%endblock%}
+
+	<!-- main content -->
+	<main class="container-fluid">
+		{%block content%}{%endblock%}
+	</main>
+
+
+	<!-- footer -->
+	<footer id="footer">
+		{% block footer %}
+		&copy; Copyright 2024 by <a href="https://github.com/shravanasati">Shravan Asati</a>.
+		{% endblock %}
+	</footer>
+</body>
+
+</html>

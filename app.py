@@ -11,3 +11,8 @@ def ping():
 @app.get("/")
 def home():
     return render_template("index.html")
+
+
+@app.get("/visualize")
+def visualize():
+    return render_template("visualize.html")

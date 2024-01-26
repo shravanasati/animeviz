@@ -1,11 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Animevisualised</title>
-</head>
-<body>
-	<h1>Visualise your MyAnimeList data effortlessly!</h1>
-</body>
-</html>
+{%extends "base.html" %}
+
+{%block title%} AnimeVisualised {%endblock%}
+
+{%block head%}
+{{super()}}
+<style>
+	body {
+		background-image: url("{{url_for('static', filename='assets/background.jpg')}}");
+		background-repeat: no-repeat;
+		background-attachment: fixed;
+		background-size: cover;
+	}
+	.text {
+		backdrop-filter: blur(4px);
+	}
+</style>
+{%endblock%}
+
+{%block content%}
+
+<center>
+	<div class="index-container" data-theme="light">
+		<h1 class=".heading">Visualise your MyAnimeList data effortlessly!</h1>
+	
+		<p style="color: rgb(132, 17, 82);"><mark>Your anime lists finally have a purpose.</mark></p>
+	
+		<a href="/login" role="button" class="btn">Get Started</a>
+		<p>OR</p>
+		<a href="/visualize" role="button">Upload the exported animelist.xml</a>
+	</div>
+</center>
+
+{%endblock%}
