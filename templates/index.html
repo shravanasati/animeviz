@@ -11,24 +11,18 @@
 		background-attachment: fixed;
 		background-size: cover;
 	}
-	.text {
-		backdrop-filter: blur(4px);
-	}
 </style>
 {%endblock%}
 
 {%block content%}
 
-<center>
-	<div class="index-container" data-theme="light">
-		<h1 class=".heading">Visualise your MyAnimeList data effortlessly!</h1>
-	
-		<p style="color: rgb(132, 17, 82);"><mark>Your anime lists finally have a purpose.</mark></p>
-	
-		<a href="/login" role="button" class="btn">Get Started</a>
-		<p>OR</p>
-		<a href="/visualize" role="button">Upload the exported animelist.xml</a>
-	</div>
-</center>
+<div class="index-container" data-theme="light">
+	<h1 class=".heading">Visualise your MyAnimeList data effortlessly!</h1>
+	<p style="color: rgb(132, 17, 82);"><mark>Your anime lists finally have a purpose.</mark></p>
+	<h3 class=".heading" style="margin: 0.5em 1em; color: rgb(0, 0, 0)">Get Started by</h3>
+	<a href="/login" role="button" class="btn">Logging in</a>
+	<p style="margin-bottom: auto; color: black;">OR</p>
+	<a href="/visualize" role="button" class="btn">Upload the exported animelist.xml</a>
 
+</div>
 {%endblock%}

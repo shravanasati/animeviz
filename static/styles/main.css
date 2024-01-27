@@ -56,8 +56,21 @@
 	margin-left: 50px;
 }
 
+.base-container {
+	min-height: 100%;
+	margin-bottom: -100px;
+}
+
+.base-container::after {
+	content: "";
+	display: block;
+	height: 100px;
+}
+
 footer {
 	margin-top: auto;
+	height: 100px;
+	padding: auto;
 }
 
 .btn {
@@ -68,4 +81,9 @@ footer {
 .index-container {
 	border: 5px solid white;
 	border-radius: 12px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	backdrop-filter: blur(3px);
 }
