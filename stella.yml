@@ -9,3 +9,8 @@ scripts:
   url: 'localhost:5000'
   command: "flask --app app run"
   shell: false
+
+- name: server
+  url: ''
+  command: "flask --app app run"
+  shell: false

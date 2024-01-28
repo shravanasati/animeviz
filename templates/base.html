@@ -22,8 +22,12 @@
 			<li><a href="https://github.com/shravanasati/animevisualised" class="no-color-link">GitHub</a></li>
 		</ul>
 		<ul>
-			<li><a href="/login" role="button" class="btn">Login with MAL</a></li>
+		{% if current_user and current_user.is_authenticated%}
+			<li><a href="/logout" role="button" class="btn">Logout</a></li>
+		{%else%}
+			<li><a href="/login/myanimelist" role="button" class="btn">Login with MAL</a></li>
 		</ul>
+		{% endif %}
 	</nav>
 	{%endblock%}
 
