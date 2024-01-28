@@ -15,7 +15,7 @@ init_db()
 
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
+app.secret_key = os.environ["SECRET_KEY"]
 app.config["SQLALCHEMY_DATABASE_URI"] = DB_CONNECTION_URI
 app.config["OAUTH2_PROVIDERS"] = {
     "myanimelist": {
@@ -151,7 +151,8 @@ def callback(provider: str):
 
 @app.route("/logout")
 def logout():
-    logout_user()
+    if current_user.is_authenticated:
+        logout_user()
     return redirect(url_for("home"))
 
 
