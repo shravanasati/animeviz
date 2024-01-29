@@ -3,8 +3,41 @@
 
 {%block title%} AnimeVisualised - Visualize your anime data{%endblock%}
 
+{% block head %}
+	{{super()}}
+	<script src="{{url_for('static', filename='scripts/form.js')}}"></script>
+{% endblock %}
+
 {%block content%}
-todo -> show upload animelist.xml button if user is not authenticated, and a visualize button for authorized users
-<br>
-also show progress bar and busy tags using pico css until response from server is obtained
+
+<div class="form-container center-container">
+	<form>
+	<fieldset>
+		<label for="nsfw">
+			<input type="checkbox" name="nsfw" id="nsfw" checked>
+			Disable NSFW tags
+		</label>
+
+		<br>
+
+		{% if current_user and current_user.is_authenticated %}
+
+
+		<label for="submit">
+			<input type="submit" value="Visualize" id="submit" >
+		</label>
+
+		{% else %}
+		<label for="file">Upload animelist.xml
+			<input type="file" name="file" id="file" accept=".xml">
+		</label>
+
+		<label for="submit">
+			<input type="submit" value="Visualize" id="submit" disabled>
+		</label>
+		{% endif %}
+	</fieldset>
+	</form>
+</div>
+
 {%endblock%}

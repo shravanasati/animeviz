@@ -16,7 +16,7 @@
 
 {%block content%}
 
-<div class="index-container" data-theme="light">
+<div class="index-container center-container" data-theme="light">
 	{% if current_user and current_user.is_authenticated %}
 		<h1>Welcome <u>{{current_user.name}}</u></h1>
 		<br><br>
@@ -25,7 +25,7 @@
 		<h1 class=".heading">Visualise your MyAnimeList data effortlessly!</h1>
 		<p style="color: rgb(132, 17, 82);"><mark>Your anime lists finally have a purpose.</mark></p>
 		<h3 class=".heading" style="margin: 0.5em 1em; color: rgb(0, 0, 0)">Get Started by</h3>
-		<a href="/login" role="button" class="btn">Logging in</a>
+		<a href="/login/myanimelist" role="button" class="btn">Logging in</a>
 		<p style="margin-bottom: auto; color: black;">OR</p>
 		<a href="/visualize" role="button" class="btn">Upload the exported animelist.xml</a>
 	{% endif %}
