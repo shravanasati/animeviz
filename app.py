@@ -3,7 +3,15 @@ import secrets
 from urllib.parse import urlencode
 
 from dotenv import load_dotenv
-from flask import Flask, abort, redirect, render_template, request, session, url_for
+from flask import (
+    Flask,
+    abort,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 from flask_login import LoginManager, current_user, login_user, logout_user
 import requests
 
@@ -40,6 +48,19 @@ def load_user(id):
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     db_session.remove()
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template("404.html")
+
+
+@app.errorhandler(401)
+def unauthorized(provider):
+    # doing this because the provider passed by abort looks like this
+    # 401 Unauthorized: provider
+    provider = str(provider).split(":")[-1].strip()
+    return render_template("401.html", provider=provider)
 
 
 @app.get("/ping")
@@ -90,19 +111,19 @@ def callback(provider: str):
     if "error" in request.args:
         print("error in request.args")
         print(request.args)
-        abort(401)
+        abort(401, provider)
 
     # make sure that the state parameter matches the one we created in the
     # authorization request
     if request.args["state"] != session.get("oauth2_state"):
         print("states dont match")
-        abort(401)
+        abort(401, provider)
 
     # make sure that the authorization code is present
     if "code" not in request.args:
         print("code not presesnt in request.args")
         print(request.args)
-        abort(401)
+        abort(401, provider)
 
     resp = requests.post(
         provider_data["token_url"],
@@ -118,12 +139,12 @@ def callback(provider: str):
 
     if resp.status_code != 200:
         print("token request failed")
-        abort(401)
+        abort(401, provider)
 
     oauth2_token = resp.json().get("access_token")
     if not oauth2_token:
         print("oauth2 token not present in token response")
-        abort(401)
+        abort(401, provider)
 
     # use the access token to get the username
     response = requests.get(
@@ -135,7 +156,7 @@ def callback(provider: str):
     )
     if response.status_code != 200:
         print("unable to get user info")
-        abort(401)
+        abort(401, provider)
 
     # find or create the user in the database
     username = response.json()["name"]
@@ -157,5 +178,18 @@ def logout():
 
 
 @app.get("/visualize")
-def visualize():
+def visualize_page():
     return render_template("visualize.html")
+
+
+@app.post("/visualize")
+def visualize():
+    disable_nsfw = request.form["disable_nsfw"]
+    animelist_file = request.files.get("file")
+    if animelist_file:
+        # animelist_file.
+        # process the animelist file
+        pass
+    else:
+        # send request to mal api
+        pass
