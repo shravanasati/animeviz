@@ -14,6 +14,10 @@ mysql-connector-python = "^8.3.0"
 python-dotenv = "^1.0.1"
 flask-login = "^0.6.3"
 requests = "^2.31.0"
+pandas = "^2.2.0"
+numpy = "^1.26.4"
+matplotlib = "^3.8.2"
+animec = {git = "https://github.com/shravanasati/animec.git"}
 
 
 [build-system]

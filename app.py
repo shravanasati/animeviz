@@ -1,6 +1,8 @@
+from io import BytesIO
 import os
 import secrets
 from urllib.parse import urlencode
+import xml.etree.ElementTree as ET
 
 from dotenv import load_dotenv
 from flask import (
@@ -17,6 +19,7 @@ import requests
 
 from database import DB_CONNECTION_URI, db_session, init_db
 from models import User
+from visualizer.visualizer import Visualizer
 
 load_dotenv("./credentials.env")
 init_db()
@@ -187,9 +190,27 @@ def visualize():
     disable_nsfw = request.form["disable_nsfw"]
     animelist_file = request.files.get("file")
     if animelist_file:
-        # animelist_file.
-        # process the animelist file
-        pass
+        try:
+            tree = ET.parse(animelist_file.stream)
+            root = tree.getroot()
+            if not root:
+                raise ET.ParseError("unable to get xml root")
+            userinfo = root.find("myinfo")
+            if userinfo is not None:
+                root.remove(userinfo)
+            
+            xml_buf = BytesIO()
+            tree.write(xml_buf)
+            xml_buf.seek(0)
+
+            viz = Visualizer.from_xml(xml_buf, opts)
+            # todo construct successfull json response from viz
+            return {"success": True, "message": "All visualizations drawn successfully.", "results": results}
+
+        except ET.ParseError:
+            return {"success": False, "message": "unable to parse the animelist.xml file", "results": []}
+
     else:
-        # send request to mal api
+        if not current_user.is_authenticated:
+            abort(401, "myanimelist")
         pass
