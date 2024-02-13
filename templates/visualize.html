@@ -4,39 +4,39 @@
 {%block title%} AnimeVisualised - Visualize your anime data{%endblock%}
 
 {% block head %}
-	{{super()}}
-	<script src="{{url_for('static', filename='scripts/form.js')}}"></script>
+{{super()}}
+<script src="{{url_for('static', filename='scripts/form.js')}}"></script>
 {% endblock %}
 
 {%block content%}
 
 <div class="form-container center-container">
-	<form>
-	<fieldset>
-		<label for="nsfw">
-			<input type="checkbox" name="nsfw" id="nsfw" checked>
-			Disable NSFW tags
-		</label>
+	<form id="visualization-form">
+		<fieldset>
+			<label for="nsfw">
+				<input type="checkbox" name="nsfw" id="nsfw" checked>
+				Disable NSFW tags
+			</label>
 
-		<br>
+			<br>
 
-		{% if current_user and current_user.is_authenticated %}
+			{% if current_user and current_user.is_authenticated %}
 
 
-		<label for="submit">
-			<input type="submit" value="Visualize" id="submit" >
-		</label>
+			<label for="submit">
+				<input type="submit" value="Visualize" id="submit">
+			</label>
 
-		{% else %}
-		<label for="file">Upload animelist.xml
-			<input type="file" name="file" id="file" accept=".xml">
-		</label>
-
-		<label for="submit">
-			<input type="submit" value="Visualize" id="submit" disabled>
-		</label>
-		{% endif %}
-	</fieldset>
+			{% else %}
+			<label for="file">Upload animelist.xml
+				<input type="file" name="file" id="file" accept=".xml">
+			</label>
+			<label for="submit">
+				<button aria-busy="false" id="submit" disabled>Visualize</button>
+				<!-- <input type="submit" value="Visualize" id="submit" disabled aria-busy="false"> -->
+			</label>
+			{% endif %}
+		</fieldset>
 	</form>
 </div>
 

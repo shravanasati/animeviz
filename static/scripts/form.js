@@ -29,7 +29,13 @@ function sendVisualizationRequest() {
 	submitBtn.setAttribute(
 		"aria-busy", "true");
 
-	submitBtn.value = "Please wait...";
+	submitBtn.innerText = "Please wait...";
+
+	let formElements = document.getElementById("visualization-form").elements;
+	for (let i = 0; i < formElements.length; i++) {
+		formElements[i].disabled = true;
+	}
+
 
 	// fetch form data and post it
 	let disableNSFW = document.getElementById("nsfw");
