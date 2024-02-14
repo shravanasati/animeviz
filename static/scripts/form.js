@@ -36,6 +36,9 @@ function sendVisualizationRequest() {
 		formElements[i].disabled = true;
 	}
 
+	let pTag = document.getElementById("time-reminder");
+	pTag.style.display = "block";
+
 
 	// fetch form data and post it
 	let disableNSFW = document.getElementById("nsfw");
@@ -54,5 +57,5 @@ function sendVisualizationRequest() {
 	fetch("/visualize", {
 		method: "POST",
 		body: formdata
-	})
+	});
 }

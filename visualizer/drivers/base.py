@@ -16,15 +16,14 @@ class VisualizationOptions:
     count_upcoming: bool
 
 
-# from myanimelist's list of explicit genres
-NSFW_GENRES = ("Erotica", "Ecchi", "Hentai")
-IGNORE_GENRES = ("Avant Garde", "Award Winning")
-
-
 class IVisualizationDriver(ABC):
     """
     Abstract base class for visualization drivers.
     """
+
+    # from myanimelist's list of explicit genres
+    NSFW_GENRES = ("Erotica", "Ecchi", "Hentai")
+    IGNORE_GENRES = ("Avant Garde", "Award Winning")
 
     def __init__(self, df: pd.DataFrame, opts: VisualizationOptions) -> None:
         self.df = df

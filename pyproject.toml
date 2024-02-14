@@ -18,6 +18,8 @@ pandas = "^2.2.0"
 numpy = "^1.26.4"
 matplotlib = "^3.8.2"
 animec = {git = "https://github.com/shravanasati/animec.git"}
+lxml = "^5.1.0"
+pendulum = "^3.0.0"
 
 
 [build-system]

@@ -19,7 +19,7 @@ import requests
 
 from database import DB_CONNECTION_URI, db_session, init_db
 from models import User
-from visualizer.visualizer import Visualizer
+from visualizer.visualizer import Visualizer, VisualizationOptions
 
 load_dotenv("./credentials.env")
 init_db()
@@ -187,10 +187,13 @@ def visualize_page():
 
 @app.post("/visualize")
 def visualize():
-    disable_nsfw = request.form["disable_nsfw"]
+    disable_nsfw = request.form["disable_nsfw"] == "true"
     animelist_file = request.files.get("file")
     if animelist_file:
         try:
+            # todo add a queued column in the database for every user
+            # for non-logged in users, hash the animelist file
+
             tree = ET.parse(animelist_file.stream)
             root = tree.getroot()
             if not root:
@@ -198,19 +201,31 @@ def visualize():
             userinfo = root.find("myinfo")
             if userinfo is not None:
                 root.remove(userinfo)
-            
+
             xml_buf = BytesIO()
             tree.write(xml_buf)
             xml_buf.seek(0)
 
+            opts = VisualizationOptions(disable_nsfw, False)
+
             viz = Visualizer.from_xml(xml_buf, opts)
+            results = viz.visualize_all()
             # todo construct successfull json response from viz
-            return {"success": True, "message": "All visualizations drawn successfully.", "results": results}
+            return {
+                "success": True,
+                "message": "All visualizations drawn successfully.",
+                "results": results,
+            }
 
         except ET.ParseError:
-            return {"success": False, "message": "unable to parse the animelist.xml file", "results": []}
+            return {
+                "success": False,
+                "message": "unable to parse the animelist.xml file",
+                "results": [],
+            }
 
     else:
         if not current_user.is_authenticated:
             abort(401, "myanimelist")
-        pass
+
+        return {"under progress": "lmao"}
