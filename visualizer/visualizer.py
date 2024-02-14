@@ -2,8 +2,8 @@ from concurrent.futures import ThreadPoolExecutor
 import os
 from io import BufferedIOBase, TextIOBase
 import pandas as pd
-from drivers.base import VisualizationOptions
-from helpers import get_anime_genre
+from .drivers.base import VisualizationOptions
+from .helpers import get_anime_genre
 
 
 class Visualizer:
