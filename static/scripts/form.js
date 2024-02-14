@@ -1,6 +1,8 @@
 window.addEventListener("load", submitButtonStateChanger)
 
 function submitButtonStateChanger() {
+	// todo dont make the visualize button disabled
+	// if the file has a value
 	let submitBtn = document.getElementById("submit");
 
 	let form = document.getElementsByTagName("form")[0];
@@ -22,7 +24,7 @@ function submitButtonStateChanger() {
 
 }
 
-function sendVisualizationRequest() {
+async function sendVisualizationRequest() {
 	// add busy circle and change submit button text
 	let submitBtn = document.getElementById("submit");
 	console.log(submitBtn);
@@ -54,8 +56,36 @@ function sendVisualizationRequest() {
 	if (file) {
 		formdata.append("file", file.files[0]);
 	}
+
 	fetch("/visualize", {
 		method: "POST",
 		body: formdata
-	});
+	})
+		.then(response => {
+			response.json().then(
+				jsonResp => {
+
+					console.log(jsonResp);
+					if (!jsonResp.success) {
+						// todo handle error
+						return;
+					}
+					jsonResp.results.forEach(b64image => {
+						let img = document.createElement("img");
+						img.src = "data:image/jpeg;base64," + b64image;
+						document.body.appendChild(img);
+					});
+				}
+			).catch(err => {
+				console.log("cannot convert response to json");
+				console.log(err);
+			})
+		})
+		.catch(err => {
+			console.log("couldn't send a post request for visualization to the server!");
+			console.log(err);
+			// todo handle error
+			alert("request failed, try again later");
+		})
+	// todo convert base64 to images
 }
