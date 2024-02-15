@@ -1,8 +1,6 @@
 window.addEventListener("load", submitButtonStateChanger)
 
 function submitButtonStateChanger() {
-	// todo dont make the visualize button disabled
-	// if the file has a value
 	let submitBtn = document.getElementById("submit");
 
 	let form = document.getElementsByTagName("form")[0];
@@ -16,11 +14,38 @@ function submitButtonStateChanger() {
 	if (!file) {
 		return;
 	}
+
+	if (file.value) {
+		submitBtn.disabled = false;
+	}
+
 	file.addEventListener("change", function () {
 		if (this.value) {
 			submitBtn.disabled = false;
 		}
 	})
+
+}
+
+function deleteForm() {
+	const form = document.querySelector("#visualization-form");
+	form.remove();
+}
+
+function createGraphAccordion(result) {
+	let b64image = result.image;
+	let title = result.title;
+
+	let details = document.createElement("details");
+	let summary = document.createElement("summary");
+	summary.innerText = title;
+	let img = document.createElement("img");
+	img.src = "data:image/jpeg;base64," + b64image;
+
+	details.appendChild(summary);
+	details.appendChild(img);
+
+	return details;
 
 }
 
@@ -70,10 +95,11 @@ async function sendVisualizationRequest() {
 						// todo handle error
 						return;
 					}
-					jsonResp.results.forEach(b64image => {
-						let img = document.createElement("img");
-						img.src = "data:image/jpeg;base64," + b64image;
-						document.body.appendChild(img);
+					deleteForm();
+					let container = document.querySelector(".form-container");
+					jsonResp.results.forEach(result => {
+						const accordion = createGraphAccordion(result);
+						container.appendChild(accordion);
 					});
 				}
 			).catch(err => {

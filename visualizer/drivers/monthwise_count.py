@@ -1,11 +1,10 @@
 from io import BytesIO
 from datetime import date
 
-import pandas as pd
 import pendulum
 from matplotlib import pyplot as plt
 
-from .base import IVisualizationDriver
+from .base import IVisualizationDriver, VisualizationResult
 
 
 class _MonthYear:
@@ -44,7 +43,7 @@ class _MonthYear:
 
 
 class MonthwiseCountDriver(IVisualizationDriver):
-    def visualize(self) -> BytesIO:
+    def visualize(self) -> VisualizationResult:
         # flag to skip adjusting data for multiple months discrepancy
         # todo what about these flags
         SKIP_ADJUST = False
@@ -114,4 +113,7 @@ class MonthwiseCountDriver(IVisualizationDriver):
         buf = BytesIO()
         plt.savefig(buf, format="png")
         buf.seek(0)
-        return buf
+
+        result = VisualizationResult("Monthwise Count", self.to_base64(buf).decode("utf-8"))
+
+        return result

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import base64
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from io import BytesIO
 
 import pandas as pd
@@ -14,6 +14,18 @@ class VisualizationOptions:
 
     disable_nsfw: bool
     count_upcoming: bool
+
+
+@dataclass(frozen=True)
+class VisualizationResult:
+    """
+    Represents a visualization result.
+    """
+    title: str
+    image: str
+
+    def as_dict(self):
+        return asdict(self)
 
 
 class IVisualizationDriver(ABC):
@@ -37,5 +49,5 @@ class IVisualizationDriver(ABC):
         return img_str
 
     @abstractmethod
-    def visualize(self) -> BytesIO:
+    def visualize(self) -> VisualizationResult:
         raise NotImplementedError("visualize method not implemented")

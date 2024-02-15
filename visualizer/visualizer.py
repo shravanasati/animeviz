@@ -2,7 +2,7 @@
 import os
 from io import BufferedIOBase, TextIOBase
 import pandas as pd
-from .drivers.base import VisualizationOptions
+from .drivers.base import VisualizationOptions, VisualizationResult
 from .drivers.monthwise_count import MonthwiseCountDriver
 # from .helpers import get_anime_genres
 
@@ -32,7 +32,7 @@ class Visualizer:
         return cls(df, opts)
 
     def visualize_all(self):
-        images = []
+        results: list[VisualizationResult] = []
         for d in self.drivers:
-            images.append(d.to_base64(d.visualize()).decode("utf-8"))
-        return images
+            results.append(d.visualize())
+        return results

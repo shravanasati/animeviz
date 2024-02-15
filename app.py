@@ -210,11 +210,11 @@ def visualize():
 
             viz = Visualizer.from_xml(xml_buf, opts)
             results = viz.visualize_all()
-            # todo construct successfull json response from viz
+            results_json = [r.as_dict() for r in results]
             return {
                 "success": True,
                 "message": "All visualizations drawn successfully.",
-                "results": results,
+                "results": results_json,
             }
 
         except ET.ParseError:
