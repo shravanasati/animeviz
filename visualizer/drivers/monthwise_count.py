@@ -58,6 +58,7 @@ class MonthwiseCountDriver(IVisualizationDriver):
         unique_month_years = set(month_years)
         data = {k: 0 for k in sorted(unique_month_years)}
 
+        # todo count only last 12 months
         for _, row in self.df.iterrows():
             if row["my_start_date"] == "0000-00-00":
                 continue
@@ -108,12 +109,17 @@ class MonthwiseCountDriver(IVisualizationDriver):
             ax.set_ylabel("Number of episodes watched")
 
         ax.set_xlabel("Months")
-        bar = ax.bar([str(i) for i in data.keys()], data.values())
+        keys = sorted(data.keys())[-12:]
+        values = [data[k] for k in keys]
+        bar = ax.bar([str(i) for i in keys], values)
+        fig.autofmt_xdate()  # rotate the xticks for better readability
         ax.bar_label(bar)
         buf = BytesIO()
         plt.savefig(buf, format="png")
         buf.seek(0)
 
-        result = VisualizationResult("Monthwise Count", self.to_base64(buf).decode("utf-8"))
+        result = VisualizationResult(
+            "Monthwise Count", self.to_base64(buf).decode("utf-8")
+        )
 
         return result

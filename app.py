@@ -189,6 +189,7 @@ def visualize_page():
 def visualize():
     disable_nsfw = request.form["disable_nsfw"] == "true"
     animelist_file = request.files.get("file")
+
     if animelist_file:
         try:
             # todo add a queued column in the database for every user

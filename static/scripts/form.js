@@ -32,30 +32,72 @@ function deleteForm() {
 	form.remove();
 }
 
+function snakeCase(text) {
+	let snake = "";
+	for (const char of text) {
+		if (char == " ") {
+			snake += "_";
+			continue;
+		}
+		snake += char.toLowerCase();
+	}
+	return snake;
+}
+
 function createGraphAccordion(result) {
 	let b64image = result.image;
 	let title = result.title;
 
 	let details = document.createElement("details");
+
+	let graphContainer = document.createElement("section");
+	graphContainer.className = "center-container";
 	let summary = document.createElement("summary");
+	summary.role = "button";
 	summary.innerText = title;
 	let img = document.createElement("img");
 	img.src = "data:image/jpeg;base64," + b64image;
+	img.className = "graph-image";
+
+	let downloadBtn = document.createElement("a");
+	downloadBtn.role = "button";
+	downloadBtn.href = img.src;
+	downloadBtn.download = snakeCase(title + ".png");
+	downloadBtn.textContent = "Download";
+	downloadBtn.classList.add("outline");
 
 	details.appendChild(summary);
-	details.appendChild(img);
+	graphContainer.appendChild(img);
+	graphContainer.appendChild(downloadBtn);
+	details.appendChild(graphContainer);
 
 	return details;
+}
 
+async function downloadAll(results) {
+	console.log("download all called");
+	const zip = new JSZip();
+
+	for (const result of results) {
+		const title = result.title;
+		const img = result.image;
+		const blob = await fetch(img).then(r => r.blob());
+		zip.file(`${snakeCase(title)}.png`, blob, { base64: true });
+	}
+	const content = await zip.generateAsync({ type: "blob" });
+	const url = URL.createObjectURL(content);
+	const a = document.createElement('a');
+	a.href = url;
+	a.role = "button";
+	a.download = 'insights.zip';
+	// a.click();
 }
 
 async function sendVisualizationRequest() {
 	// add busy circle and change submit button text
 	let submitBtn = document.getElementById("submit");
 	console.log(submitBtn);
-	submitBtn.setAttribute(
-		"aria-busy", "true");
-
+	submitBtn.setAttribute("aria-busy", "true");
 	submitBtn.innerText = "Please wait...";
 
 	let formElements = document.getElementById("visualization-form").elements;
@@ -101,6 +143,13 @@ async function sendVisualizationRequest() {
 						const accordion = createGraphAccordion(result);
 						container.appendChild(accordion);
 					});
+
+					let downloadAllButton = document.createElement("a");
+					downloadAllButton.role = "button";
+					downloadAllButton.innerText = "Download All"
+					downloadAllButton.addEventListener("click", downloadAll(jsonResp.results));
+					downloadAllButton.classList.add("outline");
+					container.appendChild(downloadAllButton);
 				}
 			).catch(err => {
 				console.log("cannot convert response to json");
@@ -113,5 +162,4 @@ async function sendVisualizationRequest() {
 			// todo handle error
 			alert("request failed, try again later");
 		})
-	// todo convert base64 to images
 }
