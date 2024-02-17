@@ -89,7 +89,7 @@ class CourwiseRatingsDriver(IVisualizationDriver):
         plt.savefig(buf, format="png")
         buf.seek(0)
 
-		# todo fix the graph a little bit
+        # todo fix the graph a little bit
         result = VisualizationResult(
             "Courwise Ratings", self.to_base64(buf).decode("utf-8")
         )

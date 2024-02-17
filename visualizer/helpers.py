@@ -1,4 +1,5 @@
 from functools import lru_cache
+
 from animec import Anime
 
 # todo ditch animec, use mal api

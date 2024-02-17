@@ -1,25 +1,18 @@
-from io import BytesIO
 import os
 import secrets
-from urllib.parse import urlencode
 import xml.etree.ElementTree as ET
+from io import BytesIO
+from urllib.parse import urlencode
 
-from dotenv import load_dotenv
-from flask import (
-    Flask,
-    abort,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for,
-)
-from flask_login import LoginManager, current_user, login_user, logout_user
 import requests
+from dotenv import load_dotenv
+from flask import (Flask, abort, redirect, render_template, request, session,
+                   url_for)
+from flask_login import LoginManager, current_user, login_user, logout_user
 
 from database import DB_CONNECTION_URI, db_session, init_db
 from models import User
-from visualizer.visualizer import Visualizer, VisualizationOptions
+from visualizer.visualizer import VisualizationOptions, Visualizer
 
 load_dotenv("./credentials.env")
 init_db()

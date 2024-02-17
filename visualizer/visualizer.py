@@ -1,10 +1,13 @@
 # from concurrent.futures import ThreadPoolExecutor
 import os
 from io import BufferedIOBase, TextIOBase
+
 import pandas as pd
+
 from .drivers.base import VisualizationOptions, VisualizationResult
-from .drivers.monthwise_count import MonthwiseCountDriver
 from .drivers.courwise_ratings import CourwiseRatingsDriver
+from .drivers.monthwise_count import MonthwiseCountDriver
+
 # from .helpers import get_anime_genres
 
 
@@ -21,7 +24,10 @@ class Visualizer:
         # self.df.loc[:, "series_genres"] = list(results)
         # print(self.df.head())
 
-        self.drivers = [MonthwiseCountDriver(self.df, self.opts), CourwiseRatingsDriver(self.df, self.opts)]
+        self.drivers = [
+            MonthwiseCountDriver(self.df, self.opts),
+            CourwiseRatingsDriver(self.df, self.opts),
+        ]
 
     @classmethod
     def from_xml(

@@ -1,6 +1,6 @@
-from abc import ABC, abstractmethod
 import base64
-from dataclasses import dataclass, asdict
+from abc import ABC, abstractmethod
+from dataclasses import asdict, dataclass
 from io import BytesIO
 
 import pandas as pd
@@ -21,6 +21,7 @@ class VisualizationResult:
     """
     Represents a visualization result.
     """
+
     title: str
     image: str
 

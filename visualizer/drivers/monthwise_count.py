@@ -1,5 +1,5 @@
-from io import BytesIO
 from datetime import date
+from io import BytesIO
 
 import pendulum
 from matplotlib import pyplot as plt
