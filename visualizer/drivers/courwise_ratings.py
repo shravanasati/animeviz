@@ -1,4 +1,6 @@
+from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 from io import BytesIO
 
 import numpy as np
@@ -8,15 +10,43 @@ from matplotlib import pyplot as plt
 from .base import IVisualizationDriver, VisualizationResult
 
 
+class CourSeason(Enum):
+    WINTER = 0
+    SPRING = 1
+    SUMMER = 2
+    FALL = 3
+
+
+@dataclass(frozen=True)
+class Cour:
+    season: CourSeason
+    year: int
+
+    def __lt__(self, other):
+        if self.year != other.year:
+            return self.year < other.year
+        else:
+            return self.season.value < other.season.value
+
+    def __eq__(self, other):
+        return self.year == other.year and self.season == other.season
+
+    def __hash__(self) -> int:
+        return hash((self.season, self.year))
+
+    def __str__(self) -> str:
+        return f"{self.season.name.capitalize()} {self.year}"
+
+
 def get_cour_from_datetime(d: datetime):
     if d.month in range(1, 4):
-        return f"Winter {d.year}"
+        return Cour(CourSeason.WINTER, d.year)
     elif d.month in range(4, 7):
-        return f"Spring {d.year}"
+        return Cour(CourSeason.SPRING, d.year)
     elif d.month in range(7, 10):
-        return f"Summer {d.year}"
+        return Cour(CourSeason.SUMMER, d.year)
     elif d.month in range(10, 13):
-        return f"Fall {d.year}"
+        return Cour(CourSeason.FALL, d.year)
     else:
         raise Exception(f"invalid month {d.month}")
 
@@ -47,13 +77,17 @@ class CourwiseRatingsDriver(IVisualizationDriver):
         quarter_percentages = {
             k: tuple(round(i / sum(v) * 100, 2) for i in v)
             for k, v in quarter_ratings.items()
+            if sum(v) != 0
         }
 
         cours = quarter_percentages.keys()
-        X = np.arange(len(cours))
-        bad_plottable = np.array([t[0] for t in quarter_percentages.values()])
-        average_plottable = np.array([t[1] for t in quarter_percentages.values()])
-        good_plottable = np.array([t[2] for t in quarter_percentages.values()])
+        keys = sorted(cours)[-12:]
+        values = [quarter_percentages[k] for k in keys]
+
+        X = np.arange(len(keys))
+        bad_plottable = np.array([t[0] for t in values])
+        average_plottable = np.array([t[1] for t in values])
+        good_plottable = np.array([t[2] for t in values])
 
         fig, ax = plt.subplots()
         ax.set_title(
@@ -62,7 +96,12 @@ class CourwiseRatingsDriver(IVisualizationDriver):
         ax.set_xlabel("Cours (doesnt include only seasonal anime)")
         ax.set_ylabel("Bad, Average and Good rating percentages")
 
-        bad_bar = ax.bar(cours, bad_plottable, color="r", label="bad rating ∈ [1, 4]")
+        bad_bar = ax.bar(
+            [str(c) for c in cours],
+            bad_plottable,
+            color="r",
+            label="bad rating ∈ [1, 4]",
+        )
         ax.bar_label(bad_bar, label_type="center")
 
         average_bar = ax.bar(
@@ -84,9 +123,11 @@ class CourwiseRatingsDriver(IVisualizationDriver):
         ax.bar_label(good_bar, label_type="center")
 
         ax.legend()
+        fig.autofmt_xdate()
+        # todo fix image cutting from sides
 
         buf = BytesIO()
-        plt.savefig(buf, format="png")
+        fig.savefig(buf, format="png")
         buf.seek(0)
 
         # todo fix the graph a little bit
