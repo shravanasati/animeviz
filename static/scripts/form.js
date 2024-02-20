@@ -51,13 +51,13 @@ function createGraphAccordion(result) {
 	let details = document.createElement("details");
 
 	let graphContainer = document.createElement("section");
-	graphContainer.className = "center-container";
+	graphContainer.classList.add("center-container");
 	let summary = document.createElement("summary");
 	summary.role = "button";
 	summary.innerText = title;
 	let img = document.createElement("img");
-	img.src = "data:image/jpeg;base64," + b64image;
-	img.className = "graph-image";
+	img.src = "data:image/png;base64," + b64image;
+	img.classList.add("graph-image");
 
 	let downloadBtn = document.createElement("a");
 	downloadBtn.role = "button";
@@ -74,6 +74,17 @@ function createGraphAccordion(result) {
 	return details;
 }
 
+function blobFromBase64String(base64String) {
+	const byteCharacters = atob(base64String);
+	const byteNumbers = new Array(byteCharacters.length);
+	for (let i = 0; i < byteCharacters.length; i++) {
+		byteNumbers[i] = byteCharacters.charCodeAt(i);
+	}
+	const byteArray = new Uint8Array(byteNumbers);
+	const blob = new Blob([byteArray], { type: "image/png" });
+	return blob;
+}
+
 async function downloadAll(results) {
 	console.log("download all called");
 	const zip = new JSZip();
@@ -81,16 +92,29 @@ async function downloadAll(results) {
 	for (const result of results) {
 		const title = result.title;
 		const img = result.image;
-		const blob = await fetch(img).then(r => r.blob());
+		const blob = blobFromBase64String(img);
 		zip.file(`${snakeCase(title)}.png`, blob, { base64: true });
 	}
 	const content = await zip.generateAsync({ type: "blob" });
-	const url = URL.createObjectURL(content);
-	const a = document.createElement('a');
-	a.href = url;
-	a.role = "button";
-	a.download = 'insights.zip';
-	// a.click();
+	const downloadAllBtn = document.createElement("button");
+	downloadAllBtn.style.textAlign = "center";
+	downloadAllBtn.style.width = "fit-content";
+	downloadAllBtn.style.padding = "10px 20px";
+	downloadAllBtn.innerText = "Download All";
+	downloadAllBtn.classList.add("outline");
+	downloadAllBtn.addEventListener("click", (event) => {
+		const fileStream = streamSaver.createWriteStream("insights.zip", {
+			size: content.size // Makes the percentage visiable in the download
+		});
+		const readableStream = content.stream()
+		if (window.WritableStream && readableStream.pipeTo) {
+			return readableStream.pipeTo(fileStream)
+				.then(() => console.log('done writing'))
+				.catch((error) => console.log(`unable to write zip file: ${error}`))
+		}
+	});
+	console.log("download all done");
+	return downloadAllBtn;
 }
 
 async function sendVisualizationRequest() {
@@ -100,6 +124,7 @@ async function sendVisualizationRequest() {
 	submitBtn.setAttribute("aria-busy", "true");
 	submitBtn.innerText = "Please wait...";
 
+	// disable form
 	let formElements = document.getElementById("visualization-form").elements;
 	for (let i = 0; i < formElements.length; i++) {
 		formElements[i].disabled = true;
@@ -134,6 +159,7 @@ async function sendVisualizationRequest() {
 
 					console.log(jsonResp);
 					if (!jsonResp.success) {
+						alert("the visualization wasn't successfull");
 						// todo handle error
 						return;
 					}
@@ -144,16 +170,19 @@ async function sendVisualizationRequest() {
 						container.appendChild(accordion);
 					});
 
-					let downloadAllButton = document.createElement("a");
-					downloadAllButton.role = "button";
-					downloadAllButton.innerText = "Download All"
-					downloadAllButton.addEventListener("click", downloadAll(jsonResp.results));
-					downloadAllButton.classList.add("outline");
-					container.appendChild(downloadAllButton);
+					downloadAll(jsonResp.results)
+						.then((downloadAllBtn) => {
+							container.appendChild(downloadAllBtn);
+						})
+						.catch((err) => {
+							alert("unable to make a zip file");
+							console.log(err);
+						});
 				}
 			).catch(err => {
 				console.log("cannot convert response to json");
 				console.log(err);
+				alert("the server returned a non-json response");
 			})
 		})
 		.catch(err => {

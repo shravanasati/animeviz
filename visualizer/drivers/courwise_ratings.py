@@ -54,7 +54,7 @@ def get_cour_from_datetime(d: datetime):
 class CourwiseRatingsDriver(IVisualizationDriver):
     def visualize(self) -> VisualizationResult:
         df = self.df[self.df["my_start_date"] != "0000-00-00"]
-        df["my_start_date"] = pd.to_datetime(df["my_start_date"])
+        df.loc[:, "my_start_date"] = pd.to_datetime(df["my_start_date"])
 
         df.set_index("my_start_date", inplace=True)
 
