@@ -86,34 +86,43 @@ function blobFromBase64String(base64String) {
 }
 
 async function downloadAll(results) {
-	console.log("download all called");
-	const zip = new JSZip();
-
-	for (const result of results) {
-		const title = result.title;
-		const img = result.image;
-		const blob = blobFromBase64String(img);
-		zip.file(`${snakeCase(title)}.png`, blob, { base64: true });
-	}
-	const content = await zip.generateAsync({ type: "blob" });
 	const downloadAllBtn = document.createElement("button");
 	downloadAllBtn.style.textAlign = "center";
 	downloadAllBtn.style.width = "fit-content";
 	downloadAllBtn.style.padding = "10px 20px";
 	downloadAllBtn.innerText = "Download All";
 	downloadAllBtn.classList.add("outline");
-	downloadAllBtn.addEventListener("click", (event) => {
-		const fileStream = streamSaver.createWriteStream("insights.zip", {
+
+	downloadAllBtn.addEventListener("click", async () => {
+		downloadAllBtn.innerText = "Please wait...";
+		downloadAllBtn.setAttribute("aria-busy", "true");
+		const zip = new JSZip();
+	
+		for (const result of results) {
+			const title = result.title;
+			const img = result.image;
+			const blob = blobFromBase64String(img);
+			zip.file(`${snakeCase(title)}.png`, blob, { base64: true });
+		}
+		const content = await zip.generateAsync({ type: "blob" });
+		const fileStream = streamSaver.createWriteStream("animevisualised_insights.zip", {
 			size: content.size // Makes the percentage visiable in the download
 		});
-		const readableStream = content.stream()
+		const readableStream = content.stream();
 		if (window.WritableStream && readableStream.pipeTo) {
 			return readableStream.pipeTo(fileStream)
-				.then(() => console.log('done writing'))
-				.catch((error) => console.log(`unable to write zip file: ${error}`))
+				.then(() => {
+					console.log('done writing')
+					downloadAllBtn.innerText = "Download All";
+					downloadAllBtn.setAttribute("aria-busy", "false");
+				})
+				.catch((error) => { 
+					console.log(`unable to write zip file: ${error}`)
+					downloadAllBtn.innerText = "Download All";
+					downloadAllBtn.setAttribute("aria-busy", "false");
+				})
 		}
 	});
-	console.log("download all done");
 	return downloadAllBtn;
 }
 

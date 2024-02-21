@@ -4,6 +4,7 @@ from dataclasses import asdict, dataclass
 from io import BytesIO
 
 import pandas as pd
+from matplotlib import use as plt_use
 
 
 @dataclass(frozen=True)
@@ -41,6 +42,7 @@ class IVisualizationDriver(ABC):
     def __init__(self, df: pd.DataFrame, opts: VisualizationOptions) -> None:
         self.df = df
         self.opts = opts
+        plt_use("agg")
 
     @staticmethod
     def to_base64(buf: BytesIO):
