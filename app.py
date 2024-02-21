@@ -6,8 +6,7 @@ from urllib.parse import urlencode
 
 import requests
 from dotenv import load_dotenv
-from flask import (Flask, abort, redirect, render_template, request, session,
-                   url_for)
+from flask import Flask, abort, redirect, render_template, request, session, url_for
 from flask_login import LoginManager, current_user, login_user, logout_user
 
 from database import DB_CONNECTION_URI, db_session, init_db
@@ -137,9 +136,12 @@ def callback(provider: str):
         print("token request failed")
         abort(401, provider)
 
-    oauth2_token = resp.json().get("access_token")
-    if not oauth2_token:
-        print("oauth2 token not present in token response")
+    resp_json = resp.json()
+    oauth2_token = resp_json.get("access_token")
+    refresh_token = resp_json.get("refresh_token")
+    # todo use refresh token to request a new access token when access token expires
+    if not oauth2_token or not refresh_token:
+        print("tokens not present in token response")
         abort(401, provider)
 
     # use the access token to get the username
@@ -180,7 +182,11 @@ def visualize_page():
 
 @app.post("/visualize")
 def visualize():
-    disable_nsfw = request.form["disable_nsfw"] == "true"
+    disable_nsfw = request.form.get("disable_nsfw")
+    if not disable_nsfw:
+        disable_nsfw = True
+    else:
+        disable_nsfw = disable_nsfw == "true"
     animelist_file = request.files.get("file")
 
     if animelist_file:

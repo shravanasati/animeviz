@@ -4,7 +4,7 @@ from io import BufferedIOBase, TextIOBase
 
 import pandas as pd
 
-from .drivers.base import VisualizationOptions, VisualizationResult
+from .drivers.base import IVisualizationDriver, VisualizationOptions, VisualizationResult
 from .drivers.courwise_ratings import CourwiseRatingsDriver
 from .drivers.monthwise_count import MonthwiseCountDriver
 
@@ -16,7 +16,7 @@ class Visualizer:
         self.df = df
         self.opts = opts
 
-        # add a genres column to the dataframe
+        # todo add a genres column to the dataframe
         # anime_names = df["series_title"]
         # with ThreadPoolExecutor(max_workers=min(len(anime_names), 25)) as pool:
         #     results = pool.map(get_anime_genres, anime_names, timeout=10)
@@ -24,7 +24,7 @@ class Visualizer:
         # self.df.loc[:, "series_genres"] = list(results)
         # print(self.df.head())
 
-        self.drivers = [
+        self.drivers: list[IVisualizationDriver] = [
             MonthwiseCountDriver(self.df, self.opts),
             CourwiseRatingsDriver(self.df, self.opts),
         ]
