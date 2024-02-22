@@ -4,7 +4,11 @@ from io import BufferedIOBase, TextIOBase
 
 import pandas as pd
 
-from .drivers.base import IVisualizationDriver, VisualizationOptions, VisualizationResult
+from .drivers.base import (
+    IVisualizationDriver,
+    VisualizationOptions,
+    VisualizationResult,
+)
 from .drivers.courwise_ratings import CourwiseRatingsDriver
 from .drivers.monthwise_count import MonthwiseCountDriver
 
@@ -39,8 +43,12 @@ class Visualizer:
         return cls(df, opts)
 
     def visualize_all(self):
-        # todo handle errors
         results: list[VisualizationResult] = []
         for d in self.drivers:
-            results.append(d.visualize())
+            try:
+                r = d.visualize()
+                results.append(r)
+            except Exception as e:
+                # todo add logging
+                print(f"error occured while vizualizing {d.__class__}: {e}")
         return results

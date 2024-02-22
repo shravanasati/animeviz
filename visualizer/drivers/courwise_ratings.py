@@ -124,13 +124,11 @@ class CourwiseRatingsDriver(IVisualizationDriver):
 
         ax.legend(fancybox=True, framealpha=0.5)
         fig.autofmt_xdate()
-        # todo fix image cutting from sides
 
         buf = BytesIO()
         fig.savefig(buf, format="png")
         buf.seek(0)
 
-        # todo fix the graph a little bit
         result = VisualizationResult(
             "Courwise Ratings", self.to_base64(buf).decode("utf-8")
         )

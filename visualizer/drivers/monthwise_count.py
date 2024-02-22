@@ -58,7 +58,6 @@ class MonthwiseCountDriver(IVisualizationDriver):
         unique_month_years = set(month_years)
         data = {k: 0 for k in sorted(unique_month_years)}
 
-        # todo count only last 12 months
         for _, row in self.df.iterrows():
             if row["my_start_date"] == "0000-00-00":
                 continue

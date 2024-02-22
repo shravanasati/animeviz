@@ -30,6 +30,7 @@ app.config["OAUTH2_PROVIDERS"] = {
         "userinfo_url": "https://api.myanimelist.net/v2/users/@me",
     },
 }
+# todo add rate limiting
 
 login_manager = LoginManager()
 login_manager.init_app(app)
