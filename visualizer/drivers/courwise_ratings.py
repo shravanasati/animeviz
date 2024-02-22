@@ -59,7 +59,7 @@ class CourwiseRatingsDriver(IVisualizationDriver):
         df.set_index("my_start_date", inplace=True)
 
         # Resample the DataFrame based on quarters
-        quarterly_groups = df.resample("Q")
+        quarterly_groups = df.resample("QE")
 
         quarter_ratings = {}
 
@@ -91,7 +91,7 @@ class CourwiseRatingsDriver(IVisualizationDriver):
 
         fig, ax = plt.subplots()
         ax.set_title(
-            "Ratings of anime in each cour as percentage of total anime I watched that season"
+            "Ratings Distribution of Anime Each Season\nExpressed as percentage of total anime watched that season"
         )
         ax.set_xlabel("Cours (doesnt include only seasonal anime)")
         ax.set_ylabel("Bad, Average and Good rating percentages")
@@ -122,7 +122,7 @@ class CourwiseRatingsDriver(IVisualizationDriver):
         )
         ax.bar_label(good_bar, label_type="center")
 
-        ax.legend()
+        ax.legend(fancybox=True, framealpha=0.5)
         fig.autofmt_xdate()
         # todo fix image cutting from sides
 
