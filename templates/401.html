@@ -12,14 +12,14 @@
 	<h1>We could not authenticate you! <kbd>:(</kbd> </h1>
 	{% endif %}
 
-	<p>You can start over from the home page, or try logging in.</p>
+	<p>You can start over from the home page, or retry logging in.</p>
 
 	<a href="/" role="button">Go back to the home page</a>
 	<br>
 	<br>
 
 	{% if provider %}
-	<a href="{{url_for('login', provider=provider)}}" role="button">Try logging in</a>
+	<a href="{{url_for('login', provider=provider)}}" role="button">Retry logging in</a>
 	{% endif %}
 </div>
 
