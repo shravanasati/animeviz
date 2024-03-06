@@ -161,7 +161,7 @@ def callback(provider: str):
     username = response.json()["name"]
     user = User.query.filter(User.name == username).first()
     if not user:
-        user = User(username)
+        user = User(username, oauth2_token)
         db_session.add(user)
         db_session.commit()
 

@@ -90,7 +90,7 @@ def get_anime_genres(anime_name: str):
     Returns the genres of anime if present in the database, otherwise sends request to MAL API.
     """
     try:
-        anime = db_session.query(Anime).filter_by(name=anime_name).first()
+        anime = Anime.query.filter(Anime.name == anime_name).first()
         print("anime object found in database:", anime)
         if not anime:
             anime_obj, genres = _anime_genres_mal(anime_name)
