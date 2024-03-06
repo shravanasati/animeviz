@@ -1,6 +1,4 @@
-# from concurrent.futures import ThreadPoolExecutor
-import os
-from io import BufferedIOBase, TextIOBase
+from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 
@@ -12,7 +10,7 @@ from .drivers.base import (
 from .drivers.courwise_ratings import CourwiseRatingsDriver
 from .drivers.monthwise_count import MonthwiseCountDriver
 
-# from .helpers import get_anime_genres
+from .api_helper import get_anime_genres
 
 
 class Visualizer:
@@ -20,13 +18,12 @@ class Visualizer:
         self.df = df
         self.opts = opts
 
-        # todo add a genres column to the dataframe
-        # anime_names = df["series_title"]
-        # with ThreadPoolExecutor(max_workers=min(len(anime_names), 25)) as pool:
-        #     results = pool.map(get_anime_genres, anime_names, timeout=10)
+        anime_names = df["series_title"]
+        with ThreadPoolExecutor(max_workers=min(len(anime_names), 25)) as pool:
+            results = pool.map(get_anime_genres, anime_names, timeout=10)
 
-        # self.df.loc[:, "series_genres"] = list(results)
-        # print(self.df.head())
+        self.df.loc[:, "series_genres"] = list(results)
+        print(self.df.head())
 
         self.drivers: list[IVisualizationDriver] = [
             MonthwiseCountDriver(self.df, self.opts),
@@ -36,7 +33,7 @@ class Visualizer:
     @classmethod
     def from_xml(
         cls,
-        xml_data: os.PathLike | BufferedIOBase | TextIOBase,
+        xml_data,
         opts: VisualizationOptions,
     ):
         df = pd.read_xml(xml_data)

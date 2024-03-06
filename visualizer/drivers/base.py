@@ -20,7 +20,7 @@ class VisualizationOptions:
 @dataclass(frozen=True)
 class VisualizationResult:
     """
-    Represents a visualization result.
+    Represents a visualization result. The image is of type `str` and must be a base64 string.
     """
 
     title: str
@@ -53,4 +53,4 @@ class IVisualizationDriver(ABC):
 
     @abstractmethod
     def visualize(self) -> VisualizationResult:
-        raise NotImplementedError("visualize method not implemented")
+        pass
