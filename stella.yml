@@ -14,3 +14,8 @@ scripts:
   url: ''
   command: "flask --app app run"
   shell: false
+
+- name: serve-all
+  url: ''
+  command: "flask --app app run -h \"0.0.0.0\" -p \"5000\""
+  shell: false

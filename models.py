@@ -9,11 +9,13 @@ class User(Base, UserMixin):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
     name = Column(String(200), unique=True)
-    oauth2token = Column(String(255))
+    login_provider = Column(String(50))
+    oauth2_token = Column(String(781))
 
-    def __init__(self, name, oauth2token):
+    def __init__(self, name, login_provider, oauth2_token):
         self.name = name
-        self.oauth2token = oauth2token
+        self.login_provider = login_provider
+        self.oauth2_token = oauth2_token
 
     def __repr__(self):
         return f"<User {self.name!r}>"

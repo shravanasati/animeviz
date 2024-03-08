@@ -1,3 +1,5 @@
+from datetime import timedelta
+import logging
 import os
 import secrets
 import xml.etree.ElementTree as ET
@@ -12,6 +14,7 @@ from flask_login import LoginManager, current_user, login_user, logout_user
 from database import DB_CONNECTION_URI, db_session, init_db
 from models import User
 from visualizer.visualizer import VisualizationOptions, Visualizer
+from visualizer.api_helper import build_df_from_mal_api_data
 
 load_dotenv("./credentials.env")
 init_db()
@@ -28,8 +31,12 @@ app.config["OAUTH2_PROVIDERS"] = {
         "token_url": "https://myanimelist.net/v1/oauth2/token",
         "redirect_uri": "localhost:5000/callback/myanimelist",
         "userinfo_url": "https://api.myanimelist.net/v2/users/@me",
+        "animelist_url": "https://api.myanimelist.net/v2/users/@me/animelist?limit=1000&fields=id,title,my_list_status,num_episodes,media_type",
     },
 }
+# flask login settings
+app.config["REMEMBER_COOKIE_DURATION"] = timedelta(days=30)
+app.config["REMEMBER_COOKIE_REFRESH_EACH_REQUEST"] = True
 # todo add rate limiting
 
 login_manager = LoginManager()
@@ -53,8 +60,8 @@ def page_not_found(e):
 
 @app.errorhandler(401)
 def unauthorized(provider):
-    # doing this because the provider passed by abort looks like this
-    # 401 Unauthorized: provider
+    # doing this string manipulation because the provider passed by
+    # abort looks like this -> 401 Unauthorized: provider
     provider = str(provider).split(":")[-1].strip()
     return render_template("401.html", provider=provider)
 
@@ -139,6 +146,7 @@ def callback(provider: str):
 
     resp_json = resp.json()
     oauth2_token = resp_json.get("access_token")
+    print(len(oauth2_token))
     refresh_token = resp_json.get("refresh_token")
     # todo use refresh token to request a new access token when access token expires
     if not oauth2_token or not refresh_token:
@@ -161,7 +169,7 @@ def callback(provider: str):
     username = response.json()["name"]
     user = User.query.filter(User.name == username).first()
     if not user:
-        user = User(username, oauth2_token)
+        user = User(username, provider, oauth2_token)
         db_session.add(user)
         db_session.commit()
 
@@ -190,6 +198,8 @@ def visualize():
         disable_nsfw = disable_nsfw == "true"
     animelist_file = request.files.get("file")
 
+    opts = VisualizationOptions(disable_nsfw, False)
+
     if animelist_file:
         try:
             # todo add a queued column in the database for every user
@@ -206,8 +216,6 @@ def visualize():
             xml_buf = BytesIO()
             tree.write(xml_buf)
             xml_buf.seek(0)
-
-            opts = VisualizationOptions(disable_nsfw, False)
 
             viz = Visualizer.from_xml(xml_buf, opts)
             results = viz.visualize_all()
@@ -229,4 +237,35 @@ def visualize():
         if not current_user.is_authenticated:
             abort(401, "myanimelist")
 
-        return {"under progress": "lmao"}
+        try:
+            oauth2_token = current_user.oauth2_token
+            login_provider = current_user.login_provider
+            provider_data = app.config["OAUTH2_PROVIDERS"][login_provider]
+            animelist_url = provider_data["animelist_url"]
+
+            paging_available = True
+            data = []
+            while paging_available:
+                resp = requests.get(animelist_url, headers={"Authorization": "Bearer " + oauth2_token})
+                resp.raise_for_status()
+                resp_json = resp.json()
+                data += resp_json["data"]
+                paging_available = bool(resp_json["paging"])
+
+            df = build_df_from_mal_api_data(data)
+            viz = Visualizer(df, opts)
+            results = viz.visualize_all()
+            results_json = [r.as_dict() for r in results]
+            return {
+                "success": True,
+                "message": "All visualizations drawn successfully.",
+                "results": results_json,
+            }
+
+        except Exception as e:
+            print("cant get user animelist")
+            logging.exception(e)
+            abort(500)
+
+
+# TODO update redirect_to URL in myanimelist api
