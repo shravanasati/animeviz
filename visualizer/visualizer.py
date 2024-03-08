@@ -3,14 +3,17 @@ import logging
 
 import pandas as pd
 
+
 from .drivers.base import (
     IVisualizationDriver,
     VisualizationOptions,
     VisualizationResult,
 )
+
 from .drivers.courwise_ratings import CourwiseRatingsDriver
 from .drivers.monthwise_count import MonthwiseCountDriver
 from .drivers.genre_distribution import GenreDistributionDriver
+from .drivers.genre_ratings import GenreRatingsDriver
 
 from .api_helper import get_anime_genres
 
@@ -30,6 +33,7 @@ class Visualizer:
             MonthwiseCountDriver(self.df, self.opts),
             CourwiseRatingsDriver(self.df, self.opts),
             GenreDistributionDriver(self.df, self.opts),
+            GenreRatingsDriver(self.df, self.opts),
         ]
 
     @classmethod
