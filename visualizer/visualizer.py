@@ -1,4 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
+import logging
 
 import pandas as pd
 
@@ -18,12 +19,11 @@ class Visualizer:
         self.df = df
         self.opts = opts
 
-        anime_names = df["series_title"]
-        with ThreadPoolExecutor(max_workers=min(len(anime_names), 25)) as pool:
-            results = pool.map(get_anime_genres, anime_names, timeout=10)
+        anime_ids = df["series_animedb_id"]
+        with ThreadPoolExecutor(max_workers=min(len(anime_ids), 25)) as pool:
+            results = pool.map(get_anime_genres, anime_ids, timeout=10)
 
         self.df.loc[:, "series_genres"] = list(results)
-        print(self.df.head())
 
         self.drivers: list[IVisualizationDriver] = [
             MonthwiseCountDriver(self.df, self.opts),
@@ -46,6 +46,6 @@ class Visualizer:
                 r = d.visualize()
                 results.append(r)
             except Exception as e:
-                # todo add logging
-                print(f"error occured while vizualizing {d.__class__}: {e}")
+                logging.error(f"error occured while vizualizing {d.__class__}")
+                logging.exception(e)
         return results

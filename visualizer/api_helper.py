@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 import sys
@@ -34,13 +35,13 @@ KNOWN_GENRES = set(
 load_dotenv("../credentials.env")
 
 
-def _anime_genres_mal(anime_name: str) -> tuple[Anime | None, list[Genre]]:
+def _anime_genres_mal(anime_id: str) -> tuple[Anime | None, list[Genre]]:
     """
     Sends a request to the MAL API to fetch the genres of the given anime.
     """
     try:
-        anime_endpoint = "https://api.myanimelist.net/v2/anime?"
-        query = urlencode({"q": anime_name[:64], "limit": 1, "fields": "genres"})
+        anime_endpoint = f"https://api.myanimelist.net/v2/anime/{anime_id}?"
+        query = urlencode({"fields": "genres"})
         api_url = anime_endpoint + query
         resp = requests.get(
             api_url,
@@ -48,26 +49,26 @@ def _anime_genres_mal(anime_name: str) -> tuple[Anime | None, list[Genre]]:
             timeout=10,
         )
         resp.raise_for_status()
-        anime_data = resp.json()["data"][0]["node"]
+        anime_data = resp.json()
 
         return Anime(anime_data["id"], anime_data["title"]), [
             Genre(**g) for g in anime_data["genres"] if g["name"] in KNOWN_GENRES
         ]
 
     except requests.HTTPError:
-        print(
+        logging.error(
             f"non 200 status code returned from MAL API, {api_url=}, {resp.status_code=}"
         )
         return None, []
 
     except IndexError:
-        print("unexpected response from MAL")
-        print(resp.json())
+        logging.error("unexpected response from MAL")
+        logging.error(resp.json())
         return None, []
 
     except Exception as e:
-        print("cant send request to mal api")
-        print(e)
+        logging.error("cant send request to mal api")
+        logging.exception(e)
         return None, []
 
 
@@ -86,15 +87,15 @@ def add_anime_genres_to_db(new_anime: Anime, genres: list[Genre]):
     db_session.commit()
 
 
-def get_anime_genres(anime_name: str):
+def get_anime_genres(anime_id: str):
     """
     Returns the genres of anime if present in the database, otherwise sends request to MAL API.
     """
     try:
-        anime = Anime.query.filter_by(name=anime_name).first()
-        print("anime object found in database:", anime)
+        anime = Anime.query.filter_by(id=anime_id).first()
+        logging.debug("anime object found in database:", anime)
         if not anime:
-            anime_obj, genres = _anime_genres_mal(anime_name)
+            anime_obj, genres = _anime_genres_mal(anime_id)
             if not anime_obj or not genres:
                 return []
             add_anime_genres_to_db(anime_obj, genres)
@@ -105,7 +106,8 @@ def get_anime_genres(anime_name: str):
         return genres
 
     except Exception as e:
-        print("error occured while fetching genres for {}: {}".format(anime_name, e))
+        logging.error("error occured while fetching genres for {}".format(anime_id))
+        logging.exception(e)
         return []
 
 

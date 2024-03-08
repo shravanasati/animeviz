@@ -1,6 +1,7 @@
-from datetime import timedelta
+from datetime import date, timedelta
 import logging
 import os
+from pathlib import Path
 import secrets
 import xml.etree.ElementTree as ET
 from io import BytesIO
@@ -38,6 +39,21 @@ app.config["OAUTH2_PROVIDERS"] = {
 app.config["REMEMBER_COOKIE_DURATION"] = timedelta(days=30)
 app.config["REMEMBER_COOKIE_REFRESH_EACH_REQUEST"] = True
 # todo add rate limiting
+# // todo add logging config
+# todo add genres distribution pie chart
+# todo add genres vs ratings graph
+
+
+# def get_logging_filepath():
+#     logs_dir = Path("./logs")
+#     if not logs_dir.exists():
+#         logs_dir.mkdir()
+
+#     today_log_file = logs_dir / str(date.today())
+#     return today_log_file
+
+
+# logging.basicConfig()
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -108,24 +124,24 @@ def callback(provider: str):
 
     provider_data = app.config["OAUTH2_PROVIDERS"].get(provider)
     if not provider_data:
-        print("missing provider data")
+        logging.debug("missing provider data")
         abort(404)
 
     if "error" in request.args:
-        print("error in request.args")
-        print(request.args)
+        logging.error("error in request.args")
+        logging.error(request.args)
         abort(401, provider)
 
     # make sure that the state parameter matches the one we created in the
     # authorization request
     if request.args["state"] != session.get("oauth2_state"):
-        print("states dont match")
+        logging.warning("states dont match")
         abort(401, provider)
 
     # make sure that the authorization code is present
     if "code" not in request.args:
-        print("code not presesnt in request.args")
-        print(request.args)
+        logging.warning("code not presesnt in request.args")
+        logging.warning(request.args)
         abort(401, provider)
 
     resp = requests.post(
@@ -141,16 +157,15 @@ def callback(provider: str):
     )
 
     if resp.status_code != 200:
-        print("token request failed")
+        logging.warning("token request failed")
         abort(401, provider)
 
     resp_json = resp.json()
     oauth2_token = resp_json.get("access_token")
-    print(len(oauth2_token))
     refresh_token = resp_json.get("refresh_token")
     # todo use refresh token to request a new access token when access token expires
     if not oauth2_token or not refresh_token:
-        print("tokens not present in token response")
+        logging.warning("tokens not present in token response")
         abort(401, provider)
 
     # use the access token to get the username
@@ -162,12 +177,12 @@ def callback(provider: str):
         },
     )
     if response.status_code != 200:
-        print("unable to get user info")
+        logging.warning("unable to get user info")
         abort(401, provider)
 
     # find or create the user in the database
     username = response.json()["name"]
-    user = User.query.filter(User.name == username).first()
+    user = User.query.filter_by(name=username).first()
     if not user:
         user = User(username, provider, oauth2_token)
         db_session.add(user)
@@ -246,11 +261,15 @@ def visualize():
             paging_available = True
             data = []
             while paging_available:
-                resp = requests.get(animelist_url, headers={"Authorization": "Bearer " + oauth2_token})
+                resp = requests.get(
+                    animelist_url, headers={"Authorization": "Bearer " + oauth2_token}
+                )
                 resp.raise_for_status()
                 resp_json = resp.json()
                 data += resp_json["data"]
                 paging_available = bool(resp_json["paging"])
+                if paging_available:
+                    animelist_url = resp_json["paging"]["next"]
 
             df = build_df_from_mal_api_data(data)
             viz = Visualizer(df, opts)
@@ -263,9 +282,9 @@ def visualize():
             }
 
         except Exception as e:
-            print("cant get user animelist")
+            logging.error("cant get user animelist")
             logging.exception(e)
             abort(500)
 
 
-# TODO update redirect_to URL in myanimelist api
+# TODO update redirect_to URL in myanimelist api page
