@@ -10,6 +10,7 @@ from .drivers.base import (
 )
 from .drivers.courwise_ratings import CourwiseRatingsDriver
 from .drivers.monthwise_count import MonthwiseCountDriver
+from .drivers.genre_distribution import GenreDistributionDriver
 
 from .api_helper import get_anime_genres
 
@@ -28,6 +29,7 @@ class Visualizer:
         self.drivers: list[IVisualizationDriver] = [
             MonthwiseCountDriver(self.df, self.opts),
             CourwiseRatingsDriver(self.df, self.opts),
+            GenreDistributionDriver(self.df, self.opts),
         ]
 
     @classmethod
@@ -46,6 +48,6 @@ class Visualizer:
                 r = d.visualize()
                 results.append(r)
             except Exception as e:
-                logging.error(f"error occured while vizualizing {d.__class__}")
+                logging.error(f"error occured while visualizing {d.__class__}")
                 logging.exception(e)
         return results
