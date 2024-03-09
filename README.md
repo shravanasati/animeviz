@@ -1,6 +1,6 @@
-# animevisualised
+# animeviz
 
-This is the repository for the website [animevisualised](). 
+This is the repository for the website [animeviz](). 
 
 
 ### Setting up the development environment
@@ -10,7 +10,7 @@ This is the repository for the website [animevisualised]().
 2. Clone the repository (fork first if you want to contribute).
 
 ```sh
-git clone https://github.com/shravanasati/animevisualised.git
+git clone https://github.com/shravanasati/animeviz.git
 ```
 
 Change the github username in the above URL if you have forked the repository.
@@ -46,9 +46,9 @@ Login into MySQL using the command:
 mysql -u {username} -p
 ```
 
-Create the `animevisualised` database:
+Create the `animeviz` database:
 ```sh
-create database animevisualised;
+create database animeviz;
 ```
 
 Now, go the project base and add a file named with `credentials.env` with the following content:
@@ -95,6 +95,7 @@ SECRET_KEY={secret_key}
 
 The application employs the `flask-limiter` library to rate limit all incoming requests. During development phase, `memory` backend is suggested to be used.
 
+Add this line to the `credentials.env` file too.
 ```
 FLASK_LIMITER_STORAGE_URI=memory://
 ```
@@ -119,3 +120,4 @@ for running the server as well as having reload on browser.
 
 
 ### Deployment Guide
+

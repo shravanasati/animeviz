@@ -7,6 +7,7 @@ from urllib.parse import urlencode
 from dotenv import load_dotenv
 import requests
 from pandas import DataFrame
+from mysql.connector.errors import IntegrityError
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from database import db_session
@@ -78,9 +79,13 @@ def _anime_genres_mal(anime_id: str) -> tuple[Anime | None, list[Genre]]:
 def add_anime_genres_to_db(new_anime: Anime, genres: list[Genre]):
     db_session.add(new_anime)
     for genre in genres:
-        if db_session.query(Genre).filter_by(id=genre.id).first():
-            continue
-        db_session.add(genre)
+        try:
+            if db_session.query(Genre).filter_by(id=genre.id).first():
+                continue
+            db_session.add(genre)
+        except IntegrityError as e:
+            logging.error(f"adding entry {genre} to database raises IntegrityError")
+            logging.exception(e)
 
     db_session.commit()
 
@@ -128,7 +133,7 @@ def build_df_from_mal_api_data(data: list):
                 "series_animedb_id": node["id"],
                 "series_title": node["title"],
                 "series_episodes": node["num_episodes"],
-                "series_type": node["media_type"],
+                "series_type": node["media_type"].upper(),
                 "my_watched_episodes": user_status["num_episodes_watched"],
                 "my_status": user_status["status"],
                 "my_start_date": user_status.get("start_date") or "0000-00-00",

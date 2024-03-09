@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "animevisualised"
+name = "animeviz"
 version = "0.1.0"
 description = "A website to make beautiful and insightful graphs on your anime lists."
 authors = ["Shravan Asati <dev.shravan@protonmail.com>"]

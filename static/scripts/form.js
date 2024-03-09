@@ -137,7 +137,7 @@ async function downloadAll(results) {
 			zip.file(`${snakeCase(title)}.png`, blob, { base64: true });
 		}
 		const content = await zip.generateAsync({ type: "blob" });
-		const fileStream = streamSaver.createWriteStream("animevisualised_insights.zip", {
+		const fileStream = streamSaver.createWriteStream("animeviz_insights.zip", {
 			size: content.size // Makes the percentage visiable in the download
 		});
 		const readableStream = content.stream();
