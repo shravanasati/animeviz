@@ -19,6 +19,11 @@ class GenreRatingsDriver(IVisualizationDriver):
                 else:
                     genres_data[g] = [rating]
 
+        if self.opts.disable_nsfw:
+            for g in self.NSFW_GENRES:
+                if g in genres_data:
+                    genres_data.pop(g)
+
         average_data = {
             k: round(sum(v) / len(v), 2) for k, v in genres_data.items() if len(v) != 0
         }

@@ -29,6 +29,9 @@ KNOWN_GENRES = set(
         "Slice of Life",
         "Sports",
         "Suspense",
+        "Erotica",
+        "Ecchi",
+        "Hentai"
     )
 )
 

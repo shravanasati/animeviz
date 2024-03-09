@@ -28,8 +28,20 @@ function submitButtonStateChanger() {
 }
 
 function deleteForm() {
-	const form = document.querySelector("#visualization-form");
-	form.remove();
+	let oldForm = document.querySelector("#visualization-form");
+	oldForm.remove();
+}
+
+function restoreForm() {
+	let form = document.querySelector("#visualization-form");
+	document.querySelector("#time-reminder").style.display = "none";
+	let submitBtn = form.querySelector("#submit");
+	submitBtn.innerText = "Visualize";
+	submitBtn.setAttribute("aria-busy", "false");
+
+	for (const elem of form.elements) {
+		elem.disabled = false;
+	}
 }
 
 function snakeCase(text) {
@@ -74,6 +86,26 @@ function createGraphAccordion(result) {
 	return details;
 }
 
+function createErrorModal(heading, content) {
+	let modal = document.querySelector("#error-modal");
+	let modalHeading = modal.querySelector("#modal-heading");
+	modalHeading.innerText = heading;
+	let modalContent = modal.querySelector("#modal-content");
+	modalContent.innerText = content;
+	modal.setAttribute("open", "");
+
+	let closeBtn = modal.querySelector(".close");
+	closeBtn.addEventListener("click", () => {
+		visibleModal = null;
+		document.documentElement.classList.add("modal-is-closing");
+		setTimeout(() => {
+			document.documentElement.classList.remove("modal-is-closing", "modal-is-open");
+			document.documentElement.style.removeProperty("--scrollbar-width");
+			modal.removeAttribute("open");
+		}, 400); // 400ms is animation duration
+	});
+}
+
 function blobFromBase64String(base64String) {
 	const byteCharacters = atob(base64String);
 	const byteNumbers = new Array(byteCharacters.length);
@@ -97,7 +129,7 @@ async function downloadAll(results) {
 		downloadAllBtn.innerText = "Please wait...";
 		downloadAllBtn.setAttribute("aria-busy", "true");
 		const zip = new JSZip();
-	
+
 		for (const result of results) {
 			const title = result.title;
 			const img = result.image;
@@ -116,9 +148,10 @@ async function downloadAll(results) {
 					downloadAllBtn.innerText = "Download All";
 					downloadAllBtn.setAttribute("aria-busy", "false");
 				})
-				.catch((error) => { 
+				.catch((error) => {
 					console.log(`unable to write zip file: ${error}`)
 					downloadAllBtn.innerText = "Download All";
+					createErrorModal("Unable to make a zip file!", "We couldn't make a zip file of all the images. Please try again later.");
 					downloadAllBtn.setAttribute("aria-busy", "false");
 				})
 		}
@@ -168,8 +201,9 @@ async function sendVisualizationRequest() {
 
 					console.log(jsonResp);
 					if (!jsonResp.success) {
-						alert("the visualization wasn't successfull");
-						// todo handle error
+						// alert("the visualization wasn't successfull");
+						createErrorModal("Unable to visualize your data!", `The server didn't respond with a successfull response: ${jsonResp.message}`);
+						restoreForm();
 						return;
 					}
 					deleteForm();
@@ -184,20 +218,23 @@ async function sendVisualizationRequest() {
 							container.appendChild(downloadAllBtn);
 						})
 						.catch((err) => {
-							alert("unable to make a zip file");
+							// alert("unable to make a zip file");
+							createErrorModal("Unable to make a zip file!", "We're unable to make a zip file of all the images. Please try again later.");
 							console.log(err);
 						});
 				}
 			).catch(err => {
 				console.log("cannot convert response to json");
 				console.log(err);
-				alert("the server returned a non-json response");
+				createErrorModal("Unable to visualize!", "The server returned a non-json response. Please try again later.");
+				// alert("the server returned a non-json response");
 			})
 		})
 		.catch(err => {
 			console.log("couldn't send a post request for visualization to the server!");
 			console.log(err);
-			// todo handle error
-			alert("request failed, try again later");
+			createErrorModal("Unable to interact with the server!", "We are unable to connect to our server. Please check your internet connection and try again.");
+			restoreForm();
+			// alert("request failed, try again later");
 		})
 }

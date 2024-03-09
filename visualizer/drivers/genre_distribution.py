@@ -40,11 +40,12 @@ class GenreDistributionDriver(IVisualizationDriver):
         genre_count = Counter()
         for genre_list in genres:
             genre_count.update(Counter(genre_list))
-        # final_ignored = self.IGNORE_GENRES + (
-        # self.NSFW_GENRES if self.opts.disable_nsfw else tuple()
-        # )
-        # for ignore_genre in final_ignored:
-        #     genre_count.pop(ignore_genre)
+        final_ignored = self.IGNORE_GENRES + (
+            self.NSFW_GENRES if self.opts.disable_nsfw else tuple()
+        )
+        for ignore_genre in final_ignored:
+            if ignore_genre in genre_count:
+                genre_count.pop(ignore_genre)
         # for _, row in self.df.iterrows():
         #     for g in row["genres"]:
         #         skip_conditions = (g in self.IGNORE_GENRES, g in self.NSFW_GENRES and self.opts.disable_nsfw)
