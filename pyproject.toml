@@ -19,6 +19,7 @@ numpy = "^1.26.4"
 matplotlib = "^3.8.2"
 lxml = "^5.1.0"
 pendulum = "^3.0.0"
+flask-limiter = "^3.5.1"
 
 
 [build-system]

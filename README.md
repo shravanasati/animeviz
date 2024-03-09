@@ -78,9 +78,9 @@ MAL_CLIENT_SECRET={client_secret}
 
 (again DO NOT include curly braces)
 
-7. Secret key setup.
+7. Secret key + limiter storage setup.
 
-The last configuration you'd need to be able to run the server is `SECRET_KEY`, which is used by login manager to keep client-side sessions secure.
+Another configuration you'd need to be able to run the server is `SECRET_KEY`, which is used by login manager to keep client-side sessions secure.
 
 Generate a safe secret key using python:
 ```py
@@ -91,6 +91,12 @@ Generate a safe secret key using python:
 Set the value as follows, in the `credentials.env` file:
 ```
 SECRET_KEY={secret_key}
+```
+
+The application employs the `flask-limiter` library to rate limit all incoming requests. During development phase, `memory` backend is suggested to be used.
+
+```
+FLASK_LIMITER_STORAGE_URI=memory://
 ```
 
 8. Run the server.
@@ -110,3 +116,6 @@ for just running the server.
 stella run
 ```
 for running the server as well as having reload on browser.
+
+
+### Deployment Guide

@@ -12,6 +12,8 @@ import requests
 from dotenv import load_dotenv
 from flask import Flask, abort, redirect, render_template, request, session, url_for
 from flask_login import LoginManager, current_user, login_user, logout_user
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 from database import DB_CONNECTION_URI, db_session, init_db
 from models import User
@@ -39,10 +41,7 @@ app.config["OAUTH2_PROVIDERS"] = {
 # flask login settings
 app.config["REMEMBER_COOKIE_DURATION"] = timedelta(days=30)
 app.config["REMEMBER_COOKIE_REFRESH_EACH_REQUEST"] = True
-# todo add rate limiting
 # // todo add logging config
-# todo add genres distribution pie chart
-# todo add genres vs ratings graph
 
 
 # def get_logging_filepath():
@@ -58,6 +57,14 @@ app.config["REMEMBER_COOKIE_REFRESH_EACH_REQUEST"] = True
 
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    headers_enabled=True,
+    storage_uri=os.environ["FLASK_LIMITER_STORAGE_URI"],
+    default_limits=["100/minute"],
+)
 
 
 @login_manager.user_loader
@@ -206,6 +213,7 @@ def visualize_page():
 
 
 @app.post("/visualize")
+@limiter.limit("10/minute;1/5second")
 def visualize():
     disable_nsfw = request.form.get("disable_nsfw")
     if not disable_nsfw:
