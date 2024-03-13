@@ -1,18 +1,17 @@
 import logging
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 from urllib.parse import urlencode
 
-from dotenv import load_dotenv
 import requests
-from pandas import DataFrame
+from dotenv import load_dotenv
 from mysql.connector.errors import IntegrityError
+from pandas import DataFrame
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from database import db_session
 from models import Anime, AnimeGenre, Genre
-
 
 KNOWN_GENRES = set(
     (
@@ -32,7 +31,7 @@ KNOWN_GENRES = set(
         "Suspense",
         "Erotica",
         "Ecchi",
-        "Hentai"
+        "Hentai",
     )
 )
 

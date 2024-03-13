@@ -5,7 +5,7 @@ This is the repository for the website [animeviz]().
 
 ### Setting up the development environment
 
-1. Install [poetry](https://python-poetry.org/), [mysql](https://www.mysql.com/products/community/) (make sure `mysql` is on PATH) and (optionally) [stella](https://github.com/shravanasati/stellapy) on your system.
+1. Install [python](https://python.org), [poetry](https://python-poetry.org/), [mysql](https://www.mysql.com/products/community/) (make sure `mysql` is on PATH) and (optionally) [stella](https://github.com/shravanasati/stellapy) on your system.
 
 2. Clone the repository (fork first if you want to contribute).
 
@@ -121,3 +121,14 @@ for running the server as well as having reload on browser.
 
 ### Deployment Guide
 
+This guide demonstrates how to self host *animeviz* on a VPS with `Ubuntu 22.04`.
+
+1. Do the above (setting up the development environment) steps.
+
+2. Follow this [tutorial](https://www.digitalocean.com/community/tutorials/how-to-serve-flask-applications-with-gunicorn-and-nginx-on-ubuntu-22-04) to install and setup gunicorn, nginx, and certbot.
+
+3. Install and configure redis using this [tutorial](https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-redis-on-ubuntu-22-04).
+
+4. Edit the `FLASK_LIMITER_STORAGE_URI` parameter in `credentials.env` to something like this `redis://:foobared@localhost:6379` where `foobared` is the redis authentication password, and `localhost` and `6379` are the host and port redis is listening on, respectively. Refer the [flask limiter docs](https://limits.readthedocs.io/en/stable/storage.html#storage-scheme) for more details.
+
+5. Go to the MAL API page and edit the **App Redirect URL** to replace `localhost` with the domain you've configured, and the **homepage URL** too.

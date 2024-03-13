@@ -1,24 +1,24 @@
-from datetime import timedelta
 import logging
 import os
 
 # from pathlib import Path
 import secrets
 import xml.etree.ElementTree as ET
+from datetime import timedelta
 from io import BytesIO
 from urllib.parse import urlencode
 
 import requests
 from dotenv import load_dotenv
 from flask import Flask, abort, redirect, render_template, request, session, url_for
-from flask_login import LoginManager, current_user, login_user, logout_user
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_login import LoginManager, current_user, login_user, logout_user
 
 from database import DB_CONNECTION_URI, db_session, init_db
 from models import User
-from visualizer.visualizer import VisualizationOptions, Visualizer
 from visualizer.api_helper import build_df_from_mal_api_data
+from visualizer.visualizer import VisualizationOptions, Visualizer
 
 load_dotenv("./credentials.env")
 init_db()

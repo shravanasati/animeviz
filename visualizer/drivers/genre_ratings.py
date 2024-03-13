@@ -1,5 +1,7 @@
 from io import BytesIO
+
 from matplotlib import pyplot as plt
+
 from .base import IVisualizationDriver, VisualizationResult
 
 

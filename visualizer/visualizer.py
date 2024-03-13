@@ -1,21 +1,18 @@
-from concurrent.futures import ThreadPoolExecutor
 import logging
+from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 
-
+from .api_helper import get_anime_genres
 from .drivers.base import (
     IVisualizationDriver,
     VisualizationOptions,
     VisualizationResult,
 )
-
 from .drivers.courwise_ratings import CourwiseRatingsDriver
-from .drivers.monthwise_count import MonthwiseCountDriver
 from .drivers.genre_distribution import GenreDistributionDriver
 from .drivers.genre_ratings import GenreRatingsDriver
-
-from .api_helper import get_anime_genres
+from .drivers.monthwise_count import MonthwiseCountDriver
 
 
 class Visualizer:

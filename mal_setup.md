@@ -24,7 +24,7 @@ The application form contains several mandatory fields. I'll focus on some of th
 
 	Both public and private clients can interact with the API in the exact same way, the only difference is how a user is authenticated. The App Type of an application cannot be changed in the future.
 
-- **App Redirect URL** ⁓ This parameter will be explained later. For now, you can set it to http://localhost/oauth. You will be able to change it every time you want.
+- **App Redirect URL** ⁓ This parameter will be explained later. For now, you can set it to `http://localhost:5000/callback/myanimelist`. You will be able to change it any time you want.
 
 - **Homepage URL** ⁓ The URL of a webpage which is linked to your API application. If you don't have one, you can set it to your MAL's profile URL. This can be changed in the future.
 

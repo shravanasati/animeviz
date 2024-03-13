@@ -1,8 +1,9 @@
 from collections import Counter
 from io import BytesIO
-from .base import IVisualizationDriver, VisualizationResult
 
 import matplotlib.pyplot as plt
+
+from .base import IVisualizationDriver, VisualizationResult
 
 
 class GenreDistributionDriver(IVisualizationDriver):
