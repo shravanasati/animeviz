@@ -38,6 +38,13 @@ app.config["OAUTH2_PROVIDERS"] = {
         "animelist_url": "https://api.myanimelist.net/v2/users/@me/animelist?limit=1000&fields=id,title,my_list_status,num_episodes,media_type",
     },
 }
+
+# setup for reverse proxy
+if bool(os.environ["PROD"]):
+    from werkzeug.middleware.proxy_fix import ProxyFix
+
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
 # flask login settings
 app.config["REMEMBER_COOKIE_DURATION"] = timedelta(days=30)
 app.config["REMEMBER_COOKIE_REFRESH_EACH_REQUEST"] = True
