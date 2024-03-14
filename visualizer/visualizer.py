@@ -1,7 +1,9 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor
+import os
 
 import pandas as pd
+from dotenv import load_dotenv
 
 from .api_helper import get_anime_genres
 from .drivers.base import (
@@ -14,6 +16,10 @@ from .drivers.genre_distribution import GenreDistributionDriver
 from .drivers.genre_ratings import GenreRatingsDriver
 from .drivers.monthwise_count import MonthwiseCountDriver
 
+load_dotenv("./credentials.env")
+
+MAX_ANIME_SEARCH_THREADS = int(os.environ["MAX_ANIME_SEARCH_THREADS"])
+
 
 class Visualizer:
     def __init__(self, df: pd.DataFrame, opts: VisualizationOptions) -> None:
@@ -21,7 +27,9 @@ class Visualizer:
         self.opts = opts
 
         anime_ids = df["series_animedb_id"]
-        with ThreadPoolExecutor(max_workers=min(len(anime_ids), 25)) as pool:
+        with ThreadPoolExecutor(
+            max_workers=min(len(anime_ids), MAX_ANIME_SEARCH_THREADS)
+        ) as pool:
             results = pool.map(get_anime_genres, anime_ids, timeout=10)
 
         self.df.loc[:, "series_genres"] = list(results)

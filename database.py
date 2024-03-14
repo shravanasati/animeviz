@@ -10,9 +10,10 @@ MYSQL_USERNAME = os.environ["MYSQL_USERNAME"]
 MYSQL_PASSWORD = os.environ["MYSQL_PASSWORD"]
 MYSQL_HOST = os.environ["MYSQL_HOST"]
 MYSQL_PORT = os.environ["MYSQL_PORT"]
+DB_POOL_SIZE = int(os.environ["DB_POOL_SIZE"])
 
 DB_CONNECTION_URI = f"mysql+mysqlconnector://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/animeviz"
-engine = create_engine(DB_CONNECTION_URI, pool_size=50)
+engine = create_engine(DB_CONNECTION_URI, pool_size=DB_POOL_SIZE)
 db_session = scoped_session(
     sessionmaker(autocommit=False, autoflush=False, bind=engine)
 )
