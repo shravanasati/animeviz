@@ -162,7 +162,6 @@ async function downloadAll(results) {
 async function sendVisualizationRequest() {
 	// add busy circle and change submit button text
 	let submitBtn = document.getElementById("submit");
-	console.log(submitBtn);
 	submitBtn.setAttribute("aria-busy", "true");
 	submitBtn.innerText = "Please wait...";
 
@@ -199,7 +198,6 @@ async function sendVisualizationRequest() {
 			response.json().then(
 				jsonResp => {
 
-					console.log(jsonResp);
 					if (!jsonResp.success) {
 						// alert("the visualization wasn't successfull");
 						createErrorModal("Unable to visualize your data!", `The server didn't respond with a successfull response: ${jsonResp.message}`);
@@ -227,6 +225,7 @@ async function sendVisualizationRequest() {
 				console.log("cannot convert response to json");
 				console.log(err);
 				createErrorModal("Unable to visualize!", "The server returned a non-json response. Please try again later.");
+				restoreForm();
 				// alert("the server returned a non-json response");
 			})
 		})
