@@ -70,7 +70,7 @@ limiter = Limiter(
     app=app,
     headers_enabled=True,
     storage_uri=os.environ["FLASK_LIMITER_STORAGE_URI"],
-    default_limits=["100/minute"],
+    default_limits=["60/minute", "1/second"],
 )
 
 
@@ -220,7 +220,7 @@ def visualize_page():
 
 
 @app.post("/visualize")
-@limiter.limit("10/minute;1/5second")
+@limiter.limit("6/minute;1/10second")
 def visualize():
     disable_nsfw = request.form.get("disable_nsfw")
     if not disable_nsfw:
@@ -301,6 +301,3 @@ def visualize():
             logging.error("cant get user animelist")
             logging.exception(e)
             abort(500)
-
-
-# TODO update redirect_to URL in myanimelist api page

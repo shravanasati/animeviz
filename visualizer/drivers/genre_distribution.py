@@ -37,6 +37,7 @@ class GenreDistributionDriver(IVisualizationDriver):
         Takes a dataframe which contains anime names and their respective genres.
         Returns a dictionary containing different genres as key and their count as values.
         """
+        # todo implement count upcoming option
         genres = self.df["series_genres"]
         genre_count = Counter()
         for genre_list in genres:
