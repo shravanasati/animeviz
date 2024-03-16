@@ -1,6 +1,6 @@
 # animeviz
 
-This is the repository for the website [animeviz](). 
+This is the repository for the website [animeviz](https://animeviz.ninja). 
 
 
 ### Setting up the development environment
@@ -58,9 +58,10 @@ MYSQL_USERNAME={username}
 MYSQL_PASSWORD={password}
 MYSQL_HOST=localhost
 MYSQL_PORT=3306
+DB_POOL_SIZE=50
 ```
 
-The host and port arguments here are the default ones. If your MySQL server runs on a different host and port, modify them accordingly.
+The host and port arguments here are the default ones. If your MySQL server runs on a different host and port, modify them accordingly. The `DB_POOL_SIZE` indicates the size of connection pool used my SQLAlchemy.
 
 (don't include curly braces in the file)
 
@@ -78,7 +79,7 @@ MAL_CLIENT_SECRET={client_secret}
 
 (again DO NOT include curly braces)
 
-7. Secret key + limiter storage setup.
+7. More configurations.
 
 Another configuration you'd need to be able to run the server is `SECRET_KEY`, which is used by login manager to keep client-side sessions secure.
 
@@ -99,6 +100,16 @@ Add this line to the `credentials.env` file too.
 ```
 FLASK_LIMITER_STORAGE_URI=memory://
 ```
+
+These are more configurations:
+```
+PROD=False
+MAX_ANIME_SEARCH_THREADS=25
+```
+
+The `PROD` variable indicates if the website is running on a production server, behind a reverse proxy like nginx. Set it to `True` only when this python app is being reverse proxied.
+
+`MAX_ANIME_SEARCH_THREADS` is the number of threads the application will spawn when searching genres of anime from the data. 
 
 8. Run the server.
 
