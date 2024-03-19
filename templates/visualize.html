@@ -9,6 +9,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.5.0/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/web-streams-polyfill@2.0.2/dist/ponyfill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/streamsaver@2.0.3/StreamSaver.min.js"></script>
+<script
+	src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onloadTurnstileCallback"
+	async defer></script>
 {% endblock %}
 
 {%block content%}
@@ -16,7 +19,7 @@
 <dialog id="error-modal">
 	<article>
 		<header>
-			<a href="#close" aria-label="Close" class="close"></a>
+			<a href="" aria-label="Close" class="close"></a>
 			<h3 id="modal-heading"></h3>
 		</header>
 		<p id="modal-content"></p>
@@ -44,11 +47,16 @@
 			<label for="file">Upload animelist.xml
 				<input type="file" name="file" id="file" accept=".xml">
 			</label>
+
+
 			<label for="submit">
 				<button aria-busy="false" id="submit" disabled>Visualize</button>
 				<!-- <input type="submit" value="Visualize" id="submit" disabled aria-busy="false"> -->
 			</label>
 			{% endif %}
+			<label for="turnstile-captcha">
+				<div id="cf-turnstile"></div>
+			</label>
 			<p id="time-reminder" style="display: none;">This might take several seconds.</p>
 		</fieldset>
 	</form>

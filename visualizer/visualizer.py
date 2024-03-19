@@ -13,7 +13,7 @@ from .drivers.base import (
 )
 from .drivers.courwise_ratings import CourwiseRatingsDriver
 from .drivers.genre_distribution import GenreDistributionDriver
-from .drivers.genre_ratings import GenreRatingsDriver
+from .drivers.genre_ratings import GenrewiseRatingsDriver
 from .drivers.monthwise_count import MonthwiseCountDriver
 
 load_dotenv("./credentials.env")
@@ -38,7 +38,7 @@ class Visualizer:
             MonthwiseCountDriver(self.df, self.opts),
             CourwiseRatingsDriver(self.df, self.opts),
             GenreDistributionDriver(self.df, self.opts),
-            GenreRatingsDriver(self.df, self.opts),
+            GenrewiseRatingsDriver(self.df, self.opts),
         ]
 
     @classmethod

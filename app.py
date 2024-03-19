@@ -14,6 +14,7 @@ from flask import Flask, abort, redirect, render_template, request, session, url
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_login import LoginManager, current_user, login_user, logout_user
+from flask_turnstile import Turnstile
 
 from database import DB_CONNECTION_URI, db_session, init_db
 from models import User
@@ -72,6 +73,13 @@ limiter = Limiter(
     headers_enabled=True,
     storage_uri=os.environ["FLASK_LIMITER_STORAGE_URI"],
     default_limits=["60/minute", "1/second"],
+)
+
+turnstile = Turnstile(
+    app=app,
+    is_enabled=True,
+    site_key=os.environ["TURNSTILE_SITE_KEY"],
+    secret_key=os.environ["TURNSTILE_SECRET_KEY"],
 )
 
 
@@ -223,6 +231,10 @@ def visualize_page():
 @app.post("/visualize")
 @limiter.limit("6/minute;1/10second")
 def visualize():
+    if not turnstile.verify():
+        # print("cpatcha verification failed")
+        abort(401, "captcha")
+
     disable_nsfw = request.form.get("disable_nsfw")
     if not disable_nsfw:
         disable_nsfw = True
@@ -274,6 +286,7 @@ def visualize():
             login_provider = current_user.login_provider
             provider_data = app.config["OAUTH2_PROVIDERS"][login_provider]
             animelist_url = provider_data["animelist_url"]
+            print("sending request to mal")
 
             paging_available = True
             data = []
@@ -288,7 +301,9 @@ def visualize():
                 if paging_available:
                     animelist_url = resp_json["paging"]["next"]
 
+            print("building df")
             df = build_df_from_mal_api_data(data)
+            print("visualizing")
             viz = Visualizer(df, opts)
             results = viz.visualize_all()
             results_json = [r.as_dict() for r in results]

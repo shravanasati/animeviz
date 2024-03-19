@@ -5,9 +5,11 @@ from matplotlib import pyplot as plt
 from .base import IVisualizationDriver, VisualizationResult
 
 
-class GenreRatingsDriver(IVisualizationDriver):
+class GenrewiseRatingsDriver(IVisualizationDriver):
     def visualize(self) -> VisualizationResult:
-        df = self.df[self.df["my_status"] != "Plan to Watch"]
+        df = self.df[
+            (self.df["my_status"] != "Plan to Watch") & (self.df["my_score"] != 0)
+        ]
         items = zip(df["series_genres"], df["my_score"])
 
         genres_data: dict[str, list[int]] = {}
@@ -44,4 +46,6 @@ class GenreRatingsDriver(IVisualizationDriver):
         fig.savefig(buf)
         buf.seek(0)
 
-        return VisualizationResult("Genre Ratings", self.to_base64(buf).decode("utf-8"))
+        return VisualizationResult(
+            "Genrewise Ratings", self.to_base64(buf).decode("utf-8")
+        )

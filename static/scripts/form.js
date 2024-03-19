@@ -1,4 +1,14 @@
 window.addEventListener("load", submitButtonStateChanger)
+var captchaWidgetID = null;
+
+window.onloadTurnstileCallback = () => {
+	captchaWidgetID = turnstile.render("#cf-turnstile", {
+		sitekey: "0x4AAAAAAAU4_tLhgcruoYjU",
+		callback: (token) => {
+
+		}
+	});
+}
 
 function submitButtonStateChanger() {
 	let submitBtn = document.getElementById("submit");
@@ -24,6 +34,14 @@ function submitButtonStateChanger() {
 			submitBtn.disabled = false;
 		}
 	})
+
+	// let captcha = document.querySelector("#cf-turnstile");
+	// turnstile.render(captcha, {
+	// 	sitekey: "0x4AAAAAAAU4_tLhgcruoYjU",
+	// 	callback: (token) => {
+	// 		console.log(token);
+	// 	}
+	// });
 
 }
 
@@ -160,6 +178,19 @@ async function downloadAll(results) {
 }
 
 async function sendVisualizationRequest() {
+	if (!captchaWidgetID) {
+		createErrorModal("Captcha not loaded!", "Unable to load captcha to verify that you are a human. Please try reloading the website.");
+		return;
+	}
+	if (turnstile.isExpired(captchaWidgetID)) {
+		turnstile.reset(captchaWidgetID);
+	}
+	if (!turnstile.getResponse()) {
+		createErrorModal("You failed to verify the captcha!", "We failed to verify that you're a human. Please try again.");
+		return;
+	}
+	// turnstile.remove(captchaWidgetID);
+
 	// add busy circle and change submit button text
 	let submitBtn = document.getElementById("submit");
 	submitBtn.setAttribute("aria-busy", "true");
@@ -189,6 +220,8 @@ async function sendVisualizationRequest() {
 	if (file) {
 		formdata.append("file", file.files[0]);
 	}
+
+	formdata.append("cf-turnstile-response", turnstile.getResponse());
 
 	fetch("/visualize", {
 		method: "POST",
@@ -223,6 +256,7 @@ async function sendVisualizationRequest() {
 				}
 			).catch(err => {
 				console.log("cannot convert response to json");
+				console.log(response);
 				console.log(err);
 				createErrorModal("Unable to visualize!", "The server returned a non-json response. Please try again later.");
 				restoreForm();

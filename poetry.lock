@@ -331,6 +331,22 @@ flask = ">=2.2.5"
 sqlalchemy = ">=2.0.16"
 
 [[package]]
+name = "flask-turnstile"
+version = "0.1.1"
+description = "A Cloudflare Turnstile extension for Flask based on flask-recaptcha"
+optional = false
+python-versions = "*"
+files = [
+    {file = "Flask-Turnstile-0.1.1.tar.gz", hash = "sha256:e97b51d684b59ffe1642eab92b3a8b75a57fd4cfc899baf1ee8eebffd9f05fbe"},
+    {file = "Flask_Turnstile-0.1.1-py3-none-any.whl", hash = "sha256:d5b97a5367489ac6368436e097e9e3b12645f39018f5d1747a9b58461384542b"},
+]
+
+[package.dependencies]
+flask = "*"
+MarkupSafe = "*"
+requests = "*"
+
+[[package]]
 name = "fonttools"
 version = "4.48.1"
 description = "Tools to manipulate font files"
@@ -1654,4 +1670,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "b1f0a1d9c2c4f47d28e37dd292fcb9f5509a1e3365efafc853b1b13828ae9ca5"
+content-hash = "101f11448ad95f441908155b07ba749f5b257fd15b76220ca1484b1a8c0eedb3"
