@@ -80,14 +80,26 @@ MAL_CLIENT_SECRET={client_secret}
 
 (again DO NOT include curly braces)
 
-7. More configurations.
+7. Cloudflare Turnstile setup.
+
+The website uses the Cloudflare [Turnstile](https://developers.cloudflare.com/turnstile/) captcha service to protect the visualization endpoint from bots.
+
+Generate a site key and a secret key from the turnstile dashboard and put them in the credentials.env file.
+
+```
+TURNSTILE_SITE_KEY={sitekey}
+TURNSTILE_SECRET_KEY={secretkey}
+```
+
+Along with that you'd also need to change the [`form.js`](./static/scripts/form.js) file and change the site key in the `window.onloadTurnstileCallback` function.
+
+8. More configurations.
 
 Another configuration you'd need to be able to run the server is `SECRET_KEY`, which is used by login manager to keep client-side sessions secure.
 
 Generate a safe secret key using python:
-```py
->>> import secrets
->>> secrets.token_hex(64)
+```sh
+python -c "import secrets;print(secrets.token_hex(64))"
 ```
 
 Set the value as follows, in the `credentials.env` file:
