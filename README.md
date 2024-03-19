@@ -59,9 +59,10 @@ MYSQL_PASSWORD={password}
 MYSQL_HOST=localhost
 MYSQL_PORT=3306
 DB_POOL_SIZE=50
+DB_POOL_RECYCLE=1800
 ```
 
-The host and port arguments here are the default ones. If your MySQL server runs on a different host and port, modify them accordingly. The `DB_POOL_SIZE` indicates the size of connection pool used my SQLAlchemy.
+The host and port arguments here are the default ones. If your MySQL server runs on a different host and port, modify them accordingly. The `DB_POOL_SIZE` indicates the size of connection pool used my SQLAlchemy. The `DB_POOL_RECYCLE` value indicates the duration in seconds after which the connection should be recycled
 
 (don't include curly braces in the file)
 
