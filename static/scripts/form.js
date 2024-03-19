@@ -223,6 +223,8 @@ async function sendVisualizationRequest() {
 
 	formdata.append("cf-turnstile-response", turnstile.getResponse());
 
+	turnstile.remove();
+
 	fetch("/visualize", {
 		method: "POST",
 		body: formdata
