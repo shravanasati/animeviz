@@ -286,7 +286,6 @@ def visualize():
             login_provider = current_user.login_provider
             provider_data = app.config["OAUTH2_PROVIDERS"][login_provider]
             animelist_url = provider_data["animelist_url"]
-            print("sending request to mal")
 
             paging_available = True
             data = []
@@ -301,9 +300,7 @@ def visualize():
                 if paging_available:
                     animelist_url = resp_json["paging"]["next"]
 
-            print("building df")
             df = build_df_from_mal_api_data(data)
-            print("visualizing")
             viz = Visualizer(df, opts)
             results = viz.visualize_all()
             results_json = [r.as_dict() for r in results]
