@@ -1,5 +1,5 @@
 window.addEventListener("load", submitButtonStateChanger)
-var captchaWidgetID = null;
+var captchaWidgetID = null; // global variable to store the captcha widget
 
 window.onloadTurnstileCallback = () => {
 	captchaWidgetID = turnstile.render("#cf-turnstile", {
@@ -114,7 +114,7 @@ function createErrorModal(heading, content) {
 
 	let closeBtn = modal.querySelector(".close");
 	closeBtn.addEventListener("click", () => {
-		visibleModal = null;
+		// visibleModal = null;
 		document.documentElement.classList.add("modal-is-closing");
 		setTimeout(() => {
 			document.documentElement.classList.remove("modal-is-closing", "modal-is-open");
@@ -179,7 +179,7 @@ async function downloadAll(results) {
 
 async function sendVisualizationRequest() {
 	if (!captchaWidgetID) {
-		createErrorModal("Captcha not loaded!", "Unable to load captcha to verify that you are a human. Please try reloading the website.");
+		createErrorModal("Captcha not loaded!", "Unable to load the captcha. Please try reloading the webpage.");
 		return;
 	}
 	if (turnstile.isExpired(captchaWidgetID)) {
@@ -189,7 +189,6 @@ async function sendVisualizationRequest() {
 		createErrorModal("You failed to verify the captcha!", "We failed to verify that you're a human. Please try again.");
 		return;
 	}
-	// turnstile.remove(captchaWidgetID);
 
 	// add busy circle and change submit button text
 	let submitBtn = document.getElementById("submit");
