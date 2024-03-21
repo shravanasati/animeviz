@@ -18,15 +18,15 @@
 <body>
 	<!-- navbar -->
 	{%block header%}
-	<nav id="navbar" class="navbar" data-theme="dark">
+	<nav id="navbar" class="navbar" data-theme="dark" style="padding: 10px !important;">
 		<ul>
 			<li><strong><a href="/" class="no-color-link">animeviz</a></strong></li>
 			<li><a href="https://github.com/shravanasati/animeviz" class="no-color-link">GitHub</a></li>
 		</ul>
 		<ul>
-		{% if current_user and current_user.is_authenticated%}
+			{% if current_user and current_user.is_authenticated%}
 			<li><a href="/logout" role="button" class="btn">Logout</a></li>
-		{%else%}
+			{%else%}
 			<li><a href="/login/myanimelist" role="button" class="btn">Login with MAL</a></li>
 		</ul>
 		{% endif %}

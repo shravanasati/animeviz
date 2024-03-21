@@ -296,7 +296,7 @@ def visualize():
                 resp.raise_for_status()
                 resp_json = resp.json()
                 data += resp_json["data"]
-                paging_available = bool(resp_json["paging"])
+                paging_available = resp_json["paging"].get("next")
                 if paging_available:
                     animelist_url = resp_json["paging"]["next"]
 

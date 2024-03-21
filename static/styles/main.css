@@ -1,6 +1,8 @@
 * {
-	padding: 1px;
-	margin: 1px;
+	padding: 0;
+	margin: 0;
+	box-sizing: border-box;
+	overflow-x: hidden;
 }
 
 :root {
@@ -57,7 +59,7 @@
 }
 
 .base-container {
-	min-height: 100%;
+	min-height: 100vh;
 	margin-bottom: -100px;
 }
 
@@ -90,6 +92,7 @@ footer {
 	border: 5px solid white;
 	border-radius: 12px;
 	backdrop-filter: blur(3px);
+	padding: 10px;
 }
 
 .form-container {
