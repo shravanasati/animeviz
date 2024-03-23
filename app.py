@@ -37,7 +37,7 @@ app.config["OAUTH2_PROVIDERS"] = {
         "token_url": "https://myanimelist.net/v1/oauth2/token",
         "redirect_uri": "localhost:5000/callback/myanimelist",
         "userinfo_url": "https://api.myanimelist.net/v2/users/@me",
-        "animelist_url": "https://api.myanimelist.net/v2/users/@me/animelist?limit=1000&fields=id,title,my_list_status,num_episodes,media_type",
+        "animelist_url": "https://api.myanimelist.net/v2/users/@me/animelist?limit=1000&fields=id,title,my_list_status,num_episodes,media_type&nsfw=1",
     },
 }
 

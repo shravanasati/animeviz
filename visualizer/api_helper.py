@@ -120,6 +120,16 @@ def get_anime_genres(anime_id: str):
 
 def build_df_from_mal_api_data(data: list):
     df_compatible_data = []
+
+    # to maintain compatibility with the exported animelist
+    compatible_status = {
+        "watching": "Watching",
+        "on_hold": "On-Hold",
+        "completed": "Completed",
+        "dropped": "Dropped",
+        "plan_to_watch": "Plan to Watch",
+    }
+
     for item in data:
         node = item["node"]
         if not node:
@@ -134,7 +144,7 @@ def build_df_from_mal_api_data(data: list):
                 "series_episodes": node["num_episodes"],
                 "series_type": node["media_type"].upper(),
                 "my_watched_episodes": user_status["num_episodes_watched"],
-                "my_status": user_status["status"],
+                "my_status": compatible_status[user_status["status"]],
                 "my_start_date": user_status.get("start_date") or "0000-00-00",
                 "my_finish_date": user_status.get("finish_date") or "0000-00-00",
                 "my_score": user_status["score"],
