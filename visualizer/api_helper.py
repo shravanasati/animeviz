@@ -49,7 +49,7 @@ def _anime_genres_mal(anime_id: str) -> tuple[Anime | None, list[Genre]]:
         resp = requests.get(
             api_url,
             headers={"X-MAL-CLIENT-ID": os.environ["MAL_CLIENT_ID"]},
-            timeout=10,
+            timeout=20,
         )
         resp.raise_for_status()
         anime_data = resp.json()

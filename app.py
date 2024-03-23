@@ -187,7 +187,6 @@ def callback(provider: str):
     resp_json = resp.json()
     oauth2_token = resp_json.get("access_token")
     refresh_token = resp_json.get("refresh_token")
-    # todo use refresh token to request a new access token when access token expires
     if not oauth2_token or not refresh_token:
         logging.warning("tokens not present in token response")
         abort(401, provider)
@@ -206,14 +205,51 @@ def callback(provider: str):
 
     # find or create the user in the database
     username = response.json()["name"]
-    user = User.query.filter_by(name=username).first()
+    user: User = User.query.filter_by(name=username).first()
     if not user:
-        user = User(username, provider, oauth2_token)
+        user = User(username, provider, oauth2_token, refresh_token)
         db_session.add(user)
-        db_session.commit()
+    else:
+        user.oauth2_token = oauth2_token
+        user.refresh_token = refresh_token
+    db_session.commit()
 
     login_user(user, remember=True)
     return redirect(url_for("home"))
+
+
+def issue_new_token(user: User):
+    provider_data = app.config["OAUTH2_PROVIDERS"][user.login_provider]
+    if not provider_data:
+        logging.debug("unable to get provider data in issue_new_token")
+        return False
+
+    resp = requests.post(
+        provider_data["token_url"],
+        data={
+            "client_id": provider_data["client_id"],
+            "client_secret": provider_data["client_secret"],
+            "refresh_token": user.refresh_token,
+            "grant_type": "refresh_token",
+        },
+        headers={"Accept": "application/json"},
+    )
+
+    if resp.status_code != 200:
+        logging.warning("issuing new access token using refresh token failed")
+        return False
+
+    resp_json = resp.json()
+    oauth2_token = resp_json.get("access_token")
+    refresh_token = resp_json.get("refresh_token")
+
+    if not oauth2_token or not refresh_token:
+        logging.warning("tokens not present in token response")
+        return False
+
+    user.refresh_token = refresh_token
+    user.oauth2_token = oauth2_token
+    db_session.commit()
 
 
 @app.route("/logout")
@@ -293,6 +329,16 @@ def visualize():
                 resp = requests.get(
                     animelist_url, headers={"Authorization": "Bearer " + oauth2_token}
                 )
+                if resp.status_code == 401:
+                    if issue_new_token(current_user):
+                        continue
+                    else:
+                        return {
+                            "success": False,
+                            "message": "Unable to authorize the user! Please logout and login once.",
+                            "results": []
+                        }
+
                 resp.raise_for_status()
                 resp_json = resp.json()
                 data += resp_json["data"]

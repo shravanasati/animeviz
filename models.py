@@ -11,11 +11,13 @@ class User(Base, UserMixin):
     name = Column(String(200), unique=True)
     login_provider = Column(String(50))
     oauth2_token = Column(String(781))
+    refresh_token = Column(String(781))
 
-    def __init__(self, name, login_provider, oauth2_token):
+    def __init__(self, name: str, login_provider: str, oauth2_token: str, refresh_token: str):
         self.name = name
         self.login_provider = login_provider
         self.oauth2_token = oauth2_token
+        self.refresh_token = refresh_token
 
     def __repr__(self):
         return f"<User {self.name!r}>"
