@@ -16,6 +16,7 @@ from .drivers.genre_distribution import GenreDistributionDriver
 from .drivers.genre_ratings import GenrewiseRatingsDriver
 from .drivers.monthwise_count import MonthwiseCountDriver
 from .drivers.ratings_curve import RatingsCurveDriver
+from .drivers.remaining_watching import RemainingCountDriver
 
 load_dotenv("./credentials.env")
 
@@ -40,7 +41,8 @@ class Visualizer:
             CourwiseRatingsDriver(self.df, self.opts),
             GenreDistributionDriver(self.df, self.opts),
             GenrewiseRatingsDriver(self.df, self.opts),
-            RatingsCurveDriver(self.df, self.opts)
+            RatingsCurveDriver(self.df, self.opts),
+            RemainingCountDriver(self.df, self.opts),
         ]
 
     @classmethod
