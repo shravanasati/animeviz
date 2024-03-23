@@ -49,7 +49,7 @@ if bool(os.environ["PROD"]):
 
 # flask login settings
 app.config["REMEMBER_COOKIE_DURATION"] = timedelta(days=30)
-app.config["REMEMBER_COOKIE_REFRESH_EACH_REQUEST"] = True
+app.config["REMEMBER_COOKIE_REFRESH_EACH_REQUEST"] = False
 # // todo add logging config
 
 
