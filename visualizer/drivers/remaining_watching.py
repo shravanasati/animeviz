@@ -15,6 +15,7 @@ class RemainingCountDriver(IVisualizationDriver):
         anime_names = df["series_title"].apply(trim_anime_title)
         watched = df["my_watched_episodes"]
         total_episodes = df["series_episodes"]
+        remaining = total_episodes - watched
         Y = np.arange(len(anime_names))
 
         fig, ax = plt.subplots()
@@ -24,10 +25,30 @@ class RemainingCountDriver(IVisualizationDriver):
 
         # todo scale remaining and watched bars such they add up to 100
 
-        total_bar = ax.barh(
+        ax.barh(
             Y, total_episodes, align="center", label="remaining", color="y"
         )
-        ax.bar_label(total_bar, label_type="edge")
+        # ax.bar_label(total_bar, label_type="edge")
+        for rect, rc in zip(ax.patches, remaining):
+            # rc is the remaining count
+
+            xval = rect.get_width()
+            yval = rect.get_y() + rect.get_height() / 2
+
+            space = 5  # space b/w bar and label
+            ha = "left"
+            if xval < 0:
+                space *= -1
+                ha = "right"
+
+            ax.annotate(
+                rc,
+                (xval, yval),
+                xytext=(space, 0),
+                textcoords="offset points",
+                va="center",
+                ha=ha,
+            )
 
         watched_bar = ax.barh(Y, watched, align="center", label="watched", color="g")
         ax.bar_label(watched_bar, label_type="center")
