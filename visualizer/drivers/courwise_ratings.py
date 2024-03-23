@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from io import BytesIO
 
 import numpy as np
 import pandas as pd
@@ -125,12 +124,8 @@ class CourwiseRatingsDriver(IVisualizationDriver):
         ax.legend(fancybox=True, framealpha=0.5)
         fig.autofmt_xdate()
 
-        buf = BytesIO()
-        fig.savefig(buf, format="png")
-        buf.seek(0)
-
         result = VisualizationResult(
-            "Courwise Ratings", self.to_base64(buf).decode("utf-8")
+            "Courwise Ratings", self.b64_image_from_plt_fig(fig)
         )
 
         return result

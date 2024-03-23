@@ -1,5 +1,4 @@
 from collections import Counter
-from io import BytesIO
 
 import matplotlib.pyplot as plt
 
@@ -22,12 +21,8 @@ class GenreDistributionDriver(IVisualizationDriver):
             pctdistance=0.6,
         )
 
-        buf = BytesIO()
-        fig.savefig(buf)
-        buf.seek(0)
-
         return VisualizationResult(
-            "Genre Distribution", self.to_base64(buf).decode("utf-8")
+            "Genre Distribution", self.b64_image_from_plt_fig(fig)
         )
 
     def get_genre_count(

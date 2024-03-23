@@ -1,5 +1,4 @@
 from datetime import date
-from io import BytesIO
 
 import pendulum
 from matplotlib import pyplot as plt
@@ -113,12 +112,9 @@ class MonthwiseCountDriver(IVisualizationDriver):
         bar = ax.bar([str(i) for i in keys], values)
         fig.autofmt_xdate()  # rotate the xticks for better readability
         ax.bar_label(bar)
-        buf = BytesIO()
-        plt.savefig(buf, format="png")
-        buf.seek(0)
 
         result = VisualizationResult(
-            "Monthwise Count", self.to_base64(buf).decode("utf-8")
+            "Monthwise Count", self.b64_image_from_plt_fig(fig)
         )
 
         return result

@@ -336,7 +336,7 @@ def visualize():
                         return {
                             "success": False,
                             "message": "Unable to authorize the user! Please logout and login once.",
-                            "results": []
+                            "results": [],
                         }
 
                 resp.raise_for_status()

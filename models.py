@@ -13,7 +13,9 @@ class User(Base, UserMixin):
     oauth2_token = Column(String(781))
     refresh_token = Column(String(1000))
 
-    def __init__(self, name: str, login_provider: str, oauth2_token: str, refresh_token: str):
+    def __init__(
+        self, name: str, login_provider: str, oauth2_token: str, refresh_token: str
+    ):
         self.name = name
         self.login_provider = login_provider
         self.oauth2_token = oauth2_token

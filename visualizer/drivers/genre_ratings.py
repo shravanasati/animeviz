@@ -1,5 +1,3 @@
-from io import BytesIO
-
 from matplotlib import pyplot as plt
 
 from .base import IVisualizationDriver, VisualizationResult
@@ -42,10 +40,6 @@ class GenrewiseRatingsDriver(IVisualizationDriver):
         ax.bar_label(bar)
         fig.autofmt_xdate()
 
-        buf = BytesIO()
-        fig.savefig(buf)
-        buf.seek(0)
-
         return VisualizationResult(
-            "Genrewise Ratings", self.to_base64(buf).decode("utf-8")
+            "Genrewise Ratings", self.b64_image_from_plt_fig(fig)
         )

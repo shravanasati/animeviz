@@ -1,6 +1,6 @@
 import logging
-from concurrent.futures import ThreadPoolExecutor
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -15,6 +15,7 @@ from .drivers.courwise_ratings import CourwiseRatingsDriver
 from .drivers.genre_distribution import GenreDistributionDriver
 from .drivers.genre_ratings import GenrewiseRatingsDriver
 from .drivers.monthwise_count import MonthwiseCountDriver
+from .drivers.ratings_curve import RatingsCurveDriver
 
 load_dotenv("./credentials.env")
 
@@ -39,6 +40,7 @@ class Visualizer:
             CourwiseRatingsDriver(self.df, self.opts),
             GenreDistributionDriver(self.df, self.opts),
             GenrewiseRatingsDriver(self.df, self.opts),
+            RatingsCurveDriver(self.df, self.opts)
         ]
 
     @classmethod
