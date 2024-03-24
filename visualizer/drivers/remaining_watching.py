@@ -16,49 +16,49 @@ class RemainingCountDriver(IVisualizationDriver):
         watched = df["my_watched_episodes"]
         total_episodes = df["series_episodes"]
         remaining = total_episodes - watched
-        Y = np.arange(len(anime_names))
 
-        fig, ax = plt.subplots()
-        ax.set_title("Remaining Content View")
-        ax.set_ylabel("Anime")
-        ax.set_xlabel("Episode Count")
+        results = {
+            anime_names.iloc[i]: [watched.iloc[i], remaining.iloc[i]]
+            for i in range(len(anime_names))
+        }
 
-        # todo scale remaining and watched bars such they add up to 100
+        category_names = ("watched", "remaining")
 
-        ax.barh(
-            Y, total_episodes, align="center", label="remaining", color="y"
+        data = np.array(list(results.values()))
+        data_cum = data.cumsum(axis=1)
+        category_colors = plt.colormaps["summer"](
+            np.linspace(0.15, 0.85, data.shape[1])
         )
-        # ax.bar_label(total_bar, label_type="edge")
-        for rect, rc in zip(ax.patches, remaining):
-            # rc is the remaining count
 
-            xval = rect.get_width()
-            yval = rect.get_y() + rect.get_height() / 2
+        fig, ax = plt.subplots(figsize=(9.2, 5))
+        ax.invert_yaxis()
+        ax.set_xlim(0, np.sum(data, axis=1).max())
 
-            space = 5  # space b/w bar and label
-            ha = "left"
-            if xval < 0:
-                space *= -1
-                ha = "right"
-
-            ax.annotate(
-                rc,
-                (xval, yval),
-                xytext=(space, 0),
-                textcoords="offset points",
-                va="center",
-                ha=ha,
+        for i, (colname, color) in enumerate(zip(category_names, category_colors)):
+            widths = data[:, i]
+            starts = data_cum[:, i] - widths
+            rects = ax.barh(
+                anime_names, widths, left=starts, height=0.5, label=colname, color=color
             )
 
-        watched_bar = ax.barh(Y, watched, align="center", label="watched", color="g")
-        ax.bar_label(watched_bar, label_type="center")
+            r, g, b, _ = color
+            text_color = "white" if r * g * b < 0.5 else "darkgrey"
+            ax.bar_label(rects, label_type="center", color=text_color)
 
-        ax.set_yticks(Y, labels=anime_names, rotation=60)
-        ax.legend(fancybox=True, framealpha=0.5)
+        ax.set_yticks(labels=anime_names, rotation=52, ticks=anime_names)
+        ax.set_title("Remaining Watching Content")
+        ax.set_ylabel("Anime Names")
+        ax.set_xlabel("Episode Count")
         ax.tick_params(
             axis="x", which="both", bottom=False, top=False, labelbottom=False
         )
 
+        ax.legend(
+            ncols=len(category_names),
+            bbox_to_anchor=(0, 1),
+            loc="lower left",
+            fontsize="small",
+        )
         return VisualizationResult(
             "Remaining Watching Content", self.b64_image_from_plt_fig(fig)
         )

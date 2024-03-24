@@ -13,9 +13,12 @@ class GenreDistributionDriver(IVisualizationDriver):
         fig, ax = plt.subplots()
         ax.axis("equal")
         ax.set_title("Anime Genre Distribution")
+        explode = [0 if i % 2 else 0.1 for i in range(len(genres))]
         ax.pie(
             genres.values(),
             labels=genres.keys(),
+            explode=explode,
+            shadow=True,
             autopct="%1.1f%%",
             labeldistance=1.2,
             pctdistance=0.6,
