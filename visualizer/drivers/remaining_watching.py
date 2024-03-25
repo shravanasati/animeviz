@@ -42,8 +42,7 @@ class RemainingCountDriver(IVisualizationDriver):
             )
 
             r, g, b, _ = color
-            text_color = "white" if r * g * b < 0.5 else "darkgrey"
-            ax.bar_label(rects, label_type="center", color=text_color)
+            ax.bar_label(rects, label_type="center", color="black")
 
         ax.set_yticks(labels=anime_names, rotation=52, ticks=anime_names)
         ax.set_title("Remaining Watching Content")
