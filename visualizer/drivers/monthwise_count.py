@@ -109,7 +109,9 @@ class MonthwiseCountDriver(IVisualizationDriver):
         ax.set_xlabel("Months")
         keys = sorted(data.keys())[-12:]
         values = [data[k] for k in keys]
-        bar = ax.bar([str(i) for i in keys], values)
+        keys_str = [str(i) for i in keys]
+        bar = ax.bar(keys_str, values, alpha=0.7, color="skyblue")
+        ax.plot(keys_str, values, color="orange")
         fig.autofmt_xdate()  # rotate the xticks for better readability
         ax.bar_label(bar)
 
