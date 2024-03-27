@@ -59,7 +59,7 @@
 }
 
 .base-container {
-	min-height: 100vh;
+	min-height: 89vh;
 	margin-bottom: -100px;
 }
 
@@ -71,7 +71,7 @@
 
 footer {
 	margin-top: auto;
-	height: 100px;
+	/* height: 100px; */
 	padding: auto;
 }
 
