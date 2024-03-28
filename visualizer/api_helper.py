@@ -129,6 +129,15 @@ def build_df_from_mal_api_data(data: list):
         "dropped": "Dropped",
         "plan_to_watch": "Plan to Watch",
     }
+    compatible_formats = {
+        "tv": "TV",
+        "pv": "PV",
+        "movie": "Movie",
+        "ova": "OVA",
+        "ona": "ONA",
+        "special": "Special",
+        "tv_special": "TV Special",
+    }
 
     for item in data:
         node = item["node"]
@@ -142,7 +151,7 @@ def build_df_from_mal_api_data(data: list):
                 "series_animedb_id": node["id"],
                 "series_title": node["title"],
                 "series_episodes": node["num_episodes"],
-                "series_type": node["media_type"].upper(),
+                "series_type": compatible_formats[node["media_type"]],
                 "my_watched_episodes": user_status["num_episodes_watched"],
                 "my_status": compatible_status[user_status["status"]],
                 "my_start_date": user_status.get("start_date") or "0000-00-00",
