@@ -12,7 +12,7 @@ class FormatDistributionDriver(IVisualizationDriver):
         series_type = self.df["series_type"]
         for i, genres in enumerate(self.df["series_genres"]):
             for genre in genres:
-                if genre in final_ignored or series_type[i] == "PV":
+                if genre in final_ignored or series_type[i] in ("PV", "Music", "Unknown"):
                     continue
                 if formats.get(series_type[i]):
                     formats[series_type[i]] += 1

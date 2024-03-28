@@ -137,6 +137,8 @@ def build_df_from_mal_api_data(data: list):
         "ona": "ONA",
         "special": "Special",
         "tv_special": "TV Special",
+        "unknown": "Unknown",
+        "music": "Music",
     }
 
     for item in data:
