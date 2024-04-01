@@ -1,5 +1,6 @@
 from datetime import date
 
+import pandas as pd
 import pendulum
 from matplotlib import pyplot as plt
 
@@ -43,25 +44,26 @@ class _MonthYear:
 
 class MonthwiseCountDriver(IVisualizationDriver):
     def visualize(self) -> VisualizationResult:
+        # todo rewrite this shit
         # flag to skip adjusting data for multiple months discrepancy
         # todo what about these flags
         SKIP_ADJUST = False
         AVERAGE = True
 
         # get a set of unique month-year combinations
-        month_years = [
-            _MonthYear.fromisoformat(i)
-            for i in self.df["my_start_date"]
-            if i != "0000-00-00"
-        ]
+        df = self.df[self.df["my_start_date"] != "0000-00-00"]
+        df.loc[:, "my_start_date"] = pd.to_datetime(
+            df["my_start_date"], format="ISO8601"
+        )
+        month_years = [_MonthYear(i) for i in df["my_start_date"] if i != "0000-00-00"]
         unique_month_years = set(month_years)
         data = {k: 0 for k in sorted(unique_month_years)}
 
-        for _, row in self.df.iterrows():
+        for _, row in df.iterrows():
             if row["my_start_date"] == "0000-00-00":
                 continue
 
-            start_date = _MonthYear.fromisoformat(row["my_start_date"])
+            start_date = _MonthYear(row["my_start_date"])
             end_date = _MonthYear(date.today())
 
             if SKIP_ADJUST:
@@ -76,7 +78,7 @@ class MonthwiseCountDriver(IVisualizationDriver):
             if start_end_same:
                 data[start_date] += int(row["my_watched_episodes"])
             else:
-                pd_start_date = pendulum.parse(row["my_start_date"])
+                pd_start_date = pendulum.parse(str(row["my_start_date"]))
                 if row["my_finish_date"] != "0000-00-00":
                     pd_end_date = pendulum.parse(row["my_finish_date"])
                 else:
