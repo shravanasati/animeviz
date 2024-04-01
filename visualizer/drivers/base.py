@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 from io import BytesIO
 
+from pathlib import Path
 import pandas as pd
 from matplotlib.figure import Figure
 from matplotlib import use as plt_use
@@ -51,6 +52,12 @@ class IVisualizationDriver(ABC):
         img_str = base64.b64encode(buf.read())
         buf.close()
         return img_str
+
+    def get_not_enough_data_image(self):
+        img_path = Path(__file__).parent / "not_enough_data_to_visualize.png"
+        with open(str(img_path), "rb") as img:
+            image_b64 = base64.b64encode(img.read()).decode("utf-8")
+        return image_b64
 
     def b64_image_from_plt_fig(self, fig: Figure):
         """

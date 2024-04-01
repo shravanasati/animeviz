@@ -5,7 +5,7 @@ from .base import IVisualizationDriver, VisualizationResult
 
 
 def trim_anime_title(name: str):
-    max_name_length = 12
+    max_name_length = 10
     return name[: max_name_length + 1] + "..."
 
 
@@ -13,6 +13,10 @@ class RemainingCountDriver(IVisualizationDriver):
     def visualize(self) -> VisualizationResult:
         df = self.df[self.df["my_status"] == "Watching"]
         anime_names = df["series_title"].apply(trim_anime_title)
+        if len(anime_names) == 0:
+            return VisualizationResult(
+                "Remaining Watching Content", self.get_not_enough_data_image()
+            )
         watched = df["my_watched_episodes"]
         total_episodes = df["series_episodes"]
         remaining = total_episodes - watched
