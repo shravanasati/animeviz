@@ -116,11 +116,11 @@ FLASK_LIMITER_STORAGE_URI=memory://
 
 These are more configurations:
 ```
-PROD=False
+PROD=0
 MAX_ANIME_SEARCH_THREADS=25
 ```
 
-The `PROD` variable indicates if the website is running on a production server, behind a reverse proxy like nginx. Set it to `True` only when this python app is being reverse proxied.
+The `PROD` variable indicates if the website is running on a production server, behind a reverse proxy like nginx. Set it to `1` only when this python app is being reverse proxied.
 
 `MAX_ANIME_SEARCH_THREADS` is the number of threads the application will spawn when searching genres of anime from the data. 
 

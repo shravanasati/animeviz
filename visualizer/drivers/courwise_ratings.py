@@ -56,7 +56,6 @@ class CourwiseRatingsDriver(IVisualizationDriver):
         df.loc[:, "my_start_date"] = pd.to_datetime(df["my_start_date"], format="ISO8601")
 
         df.set_index("my_start_date", inplace=True)
-        # todo sanitize dates
 
         # Resample the DataFrame based on quarters
         quarterly_groups = df.resample("QE")

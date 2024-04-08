@@ -42,7 +42,7 @@ app.config["OAUTH2_PROVIDERS"] = {
 }
 
 # setup for reverse proxy
-if bool(os.environ["PROD"]):
+if int(os.environ["PROD"]):
     from werkzeug.middleware.proxy_fix import ProxyFix
 
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
