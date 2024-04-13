@@ -1,3 +1,4 @@
+import gc
 import logging
 import os
 
@@ -350,6 +351,7 @@ def visualize():
             viz = Visualizer(df, opts)
             results = viz.visualize_all()
             results_json = [r.as_dict() for r in results]
+            del viz
             return {
                 "success": True,
                 "message": "All visualizations drawn successfully.",
@@ -360,3 +362,7 @@ def visualize():
             logging.error("cant get user animelist")
             logging.exception(e)
             abort(500)
+
+        finally:
+            # todo fix memory leaks
+            gc.collect()
