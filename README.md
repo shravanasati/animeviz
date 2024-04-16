@@ -151,8 +151,10 @@ This guide demonstrates how to self host *animeviz* on a VPS with `Ubuntu 22.04`
 
 2. Follow this [tutorial](https://www.digitalocean.com/community/tutorials/how-to-serve-flask-applications-with-gunicorn-and-nginx-on-ubuntu-22-04) to install and setup gunicorn, nginx, and certbot.
 
-3. Install and configure redis using this [tutorial](https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-redis-on-ubuntu-22-04).
+3. Install and configure MySQL using this [tutorial](https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-ubuntu-22-04).
 
-4. Edit the `FLASK_LIMITER_STORAGE_URI` parameter in `credentials.env` to something like this `redis://:foobared@localhost:6379` where `foobared` is the redis authentication password, and `localhost` and `6379` are the host and port redis is listening on, respectively. Refer the [flask limiter docs](https://limits.readthedocs.io/en/stable/storage.html#storage-scheme) for more details.
+4. Install and configure redis using this [tutorial](https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-redis-on-ubuntu-22-04).
 
-5. Go to the MAL API page and edit the **App Redirect URL** to replace `localhost` with the domain you've configured, and the **homepage URL** too.
+5. Edit the `FLASK_LIMITER_STORAGE_URI` parameter in `credentials.env` to something like this `redis://:foobared@localhost:6379` where `foobared` is the redis authentication password, and `localhost` and `6379` are the host and port redis is listening on, respectively. Refer the [flask limiter docs](https://limits.readthedocs.io/en/stable/storage.html#storage-scheme) for more details.
+
+6. Go to the MAL API page and edit the **App Redirect URL** to replace `localhost` with the domain you've configured, and the **homepage URL** too.
