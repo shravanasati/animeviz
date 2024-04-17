@@ -36,7 +36,7 @@ source ./venv/bin/activate
 4. Install all the dependencies.
 
 ```sh
-poetry install
+poetry install --no-root
 ```
 
 5. Setup the database.
