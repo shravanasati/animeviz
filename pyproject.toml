@@ -20,7 +20,7 @@ matplotlib = "^3.8.2"
 lxml = "^5.1.0"
 pendulum = "^3.0.0"
 flask-limiter = {extras = ["redis"], version = "^3.5.1"}
-gunicorn = "^21.2.0"
+gunicorn = "^22.0.0"
 flask-turnstile = "^0.1.1"
 gevent = "^24.2.1"
 
