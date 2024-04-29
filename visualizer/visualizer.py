@@ -18,6 +18,7 @@ from .drivers.monthwise_count import MonthwiseCountDriver
 from .drivers.ratings_curve import RatingsCurveDriver
 from .drivers.remaining_watching import RemainingCountDriver
 from .drivers.format_distribution import FormatDistributionDriver
+from .drivers.fastest_finished import FastestFinishedDriver
 
 load_dotenv("./credentials.env")
 
@@ -37,7 +38,6 @@ class Visualizer:
 
         self.df.loc[:, "series_genres"] = list(results)
 
-        # todo add a fastest finished anime chart
         self.drivers: list[IVisualizationDriver] = [
             MonthwiseCountDriver(self.df, self.opts),
             CourwiseRatingsDriver(self.df, self.opts),
@@ -46,6 +46,7 @@ class Visualizer:
             RatingsCurveDriver(self.df, self.opts),
             RemainingCountDriver(self.df, self.opts),
             FormatDistributionDriver(self.df, self.opts),
+            FastestFinishedDriver(self.df, self.opts)
         ]
 
     @classmethod
