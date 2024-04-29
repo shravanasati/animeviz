@@ -124,7 +124,7 @@ The `PROD` variable indicates if the website is running on a production server, 
 
 `MAX_ANIME_SEARCH_THREADS` is the number of threads the application will spawn when searching genres of anime from the data. 
 
-8. Run the server.
+9. Run the server.
 
 ```sh
 flask --app app run

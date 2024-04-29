@@ -37,6 +37,7 @@ class Visualizer:
 
         self.df.loc[:, "series_genres"] = list(results)
 
+        # todo add a fastest finished anime chart
         self.drivers: list[IVisualizationDriver] = [
             MonthwiseCountDriver(self.df, self.opts),
             CourwiseRatingsDriver(self.df, self.opts),
