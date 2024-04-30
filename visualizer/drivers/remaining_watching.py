@@ -4,8 +4,7 @@ import numpy as np
 from .base import IVisualizationDriver, VisualizationResult
 
 
-def trim_anime_title(name: str):
-    max_name_length = 10
+def trim_anime_title(name: str, max_name_length: int = 10):
     return name[: max_name_length + 1] + "..."
 
 

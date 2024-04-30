@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from .base import IVisualizationDriver, VisualizationResult
+from .remaining_watching import trim_anime_title
 
 
 class FastestFinishedDriver(IVisualizationDriver):
@@ -25,14 +26,20 @@ class FastestFinishedDriver(IVisualizationDriver):
             df["my_finish_date"], format="ISO8601"
         )
 
-        df.loc[:, "episode_day_ratio"] = (df["my_finish_date"] - df["my_start_date"])
-        df.loc[:, "episode_day_ratio"] = df["episode_day_ratio"].apply(lambda x: x.days)
-        df.loc[:, "episode_day_ratio"] /= df["my_watched_episodes"]
-
-        fastest_finished_tuple = heapq.nsmallest(
-            6, zip(df["series_title"], df["episode_day_ratio"]), key=lambda t: t[1]
+        df.loc[:, "episode_day_ratio"] = df["my_finish_date"] - df["my_start_date"]
+        df.loc[:, "episode_day_ratio"] = df["episode_day_ratio"].apply(
+            lambda x: x.days if x.days > 0 else 1
         )
-        fastest_finished_titles = [t[0] for t in fastest_finished_tuple]
+        df.loc[:, "episode_day_ratio"] = (
+            df["my_watched_episodes"] / df["episode_day_ratio"]
+        )
+
+        fastest_finished_tuple = heapq.nlargest(
+            8, zip(df["series_title"], df["episode_day_ratio"]), key=lambda t: t[1]
+        )
+        fastest_finished_titles = [
+            trim_anime_title(t[0], 15) for t in fastest_finished_tuple
+        ]
         fastest_finished_ratio = [t[1] for t in fastest_finished_tuple]
 
         fig, ax = plt.subplots()
