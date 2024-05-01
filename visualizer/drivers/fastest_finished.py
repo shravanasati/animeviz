@@ -46,9 +46,13 @@ class FastestFinishedDriver(IVisualizationDriver):
         ax.set_title("Fastest Finished Anime (by episodes watched per day)")
         ax.set_xlabel("Anime Names")
         ax.set_ylabel("Episodes watched per day")
-        bar = ax.bar(fastest_finished_titles, fastest_finished_ratio)
+        bar = ax.bar(
+            fastest_finished_titles,
+            fastest_finished_ratio,
+            color=["#FF9999", "#66B3FF", "#99FF99", "#FFCC99", "#FFD700", "#FF6347"],
+        )
         ax.bar_label(bar)
-        fig.autofmt_xdate()
+        fig.autofmt_xdate()  # rotate xticks
 
         return VisualizationResult(
             "Fastest Finished Anime", self.b64_image_from_plt_fig(fig)
