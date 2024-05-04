@@ -52,6 +52,12 @@ class MonthwiseCountDriver(IVisualizationDriver):
 
         # get a set of unique month-year combinations
         df = self.df[self.df["my_start_date"] != "0000-00-00"]
+
+        if len(df) == 0:
+            return VisualizationResult(
+                "Monthwise Count", self.get_not_enough_data_image()
+            )
+
         df.loc[:, "my_start_date"] = pd.to_datetime(
             df["my_start_date"], format="ISO8601"
         )

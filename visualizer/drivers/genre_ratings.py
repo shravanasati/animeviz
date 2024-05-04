@@ -8,6 +8,11 @@ class GenrewiseRatingsDriver(IVisualizationDriver):
         df = self.df[
             (self.df["my_status"] != "Plan to Watch") & (self.df["my_score"] != 0)
         ]
+        if len(df) == 0:
+            return VisualizationResult(
+                "Genrewise Ratings", self.get_not_enough_data_image()
+            )
+
         items = zip(df["series_genres"], df["my_score"])
 
         genres_data: dict[str, list[int]] = {}

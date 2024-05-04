@@ -7,6 +7,11 @@ from .base import IVisualizationDriver, VisualizationResult
 
 class GenreDistributionDriver(IVisualizationDriver):
     def visualize(self) -> VisualizationResult:
+        if len(self.df) == 0:
+            return VisualizationResult(
+                "Genre Distribution", self.get_not_enough_data_image()
+            )
+
         genres = self.get_genre_count()
 
         # pie chart

@@ -18,6 +18,11 @@ class FastestFinishedDriver(IVisualizationDriver):
             & (self.df["my_watched_episodes"] != 0)
         ]
 
+        if len(df) == 0:
+            return VisualizationResult(
+                "Fastest Finished Anime", self.get_not_enough_data_image()
+            )
+
         # convert date columns to actual dates
         df.loc[:, "my_start_date"] = pd.to_datetime(
             df["my_start_date"], format="ISO8601"

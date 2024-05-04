@@ -7,6 +7,11 @@ from .base import IVisualizationDriver, VisualizationResult
 class RatingsCurveDriver(IVisualizationDriver):
     def visualize(self) -> VisualizationResult:
         df = self.df[self.df["my_score"] != 0]
+        if len(df) == 0:
+            return VisualizationResult(
+                "Ratings Curve", self.get_not_enough_data_image()
+            )
+
         ratings = Counter(df["my_score"])
 
         fig, ax = plt.subplots()

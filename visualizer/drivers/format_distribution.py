@@ -5,6 +5,11 @@ from .base import IVisualizationDriver, VisualizationResult
 
 class FormatDistributionDriver(IVisualizationDriver):
     def visualize(self) -> VisualizationResult:
+        if len(self.df) == 0:
+            return VisualizationResult(
+                "Format Distribution", self.get_not_enough_data_image()
+            )
+
         final_ignored = self.IGNORE_GENRES + (
             self.NSFW_GENRES if self.opts.disable_nsfw else tuple()
         )
@@ -12,7 +17,11 @@ class FormatDistributionDriver(IVisualizationDriver):
         series_type = self.df["series_type"]
         for i, genres in enumerate(self.df["series_genres"]):
             for genre in genres:
-                if genre in final_ignored or series_type[i] in ("PV", "Music", "Unknown"):
+                if genre in final_ignored or series_type[i] in (
+                    "PV",
+                    "Music",
+                    "Unknown",
+                ):
                     continue
                 if formats.get(series_type[i]):
                     formats[series_type[i]] += 1
