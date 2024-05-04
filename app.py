@@ -273,13 +273,20 @@ def visualize():
         abort(401, "captcha")
 
     disable_nsfw = request.form.get("disable_nsfw")
+    interactive_charts = request.form.get("interactive_charts")
     if not disable_nsfw:
         disable_nsfw = True
     else:
         disable_nsfw = disable_nsfw == "true"
+
+    if not interactive_charts:
+        interactive_charts = False
+    else:
+        interactive_charts = interactive_charts == "true"
+
     animelist_file = request.files.get("file")
 
-    opts = VisualizationOptions(disable_nsfw, False)
+    opts = VisualizationOptions(disable_nsfw, False, interactive_charts)
 
     if animelist_file:
         try:

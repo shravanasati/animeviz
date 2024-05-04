@@ -207,8 +207,10 @@ async function sendVisualizationRequest() {
 
 	// fetch form data and post it
 	let disableNSFW = document.getElementById("nsfw");
+	let interactiveCharts = document.getElementById("interactive");
 	const data = {
 		"disable_nsfw": disableNSFW.checked,
+		"interactive_charts": interactiveCharts.checked
 	}
 	let formdata = new FormData();
 	for (const key in data) {

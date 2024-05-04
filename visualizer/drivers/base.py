@@ -17,6 +17,7 @@ class VisualizationOptions:
 
     disable_nsfw: bool
     count_upcoming: bool
+    interactive_charts: bool
 
 
 @dataclass(frozen=True)
