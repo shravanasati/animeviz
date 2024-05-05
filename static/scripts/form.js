@@ -74,7 +74,7 @@ function snakeCase(text) {
 	return snake;
 }
 
-function createGraphAccordion(result) {
+function _createMatplotlibAccordion(result) {
 	let b64image = result.image;
 	let title = result.title;
 
@@ -102,6 +102,40 @@ function createGraphAccordion(result) {
 	details.appendChild(graphContainer);
 
 	return details;
+}
+
+function _createPlotlyAccordion(result) {
+	const title = result.title;
+	let snakeTitle = snakeCase(title);
+	const figure = JSON.parse(result.figure);
+
+	let details = document.createElement("details");
+
+	let graphContainer = document.createElement("section");
+	graphContainer.classList.add("center-container");
+	let summary = document.createElement("summary");
+	summary.role = "button";
+	summary.innerText = title;
+
+	let renderContainer = document.createElement("div");
+	renderContainer.setAttribute("id", snakeTitle);
+	Plotly.newPlot(renderContainer, figure.data, figure.layout);
+
+	details.appendChild(summary);
+	graphContainer.appendChild(renderContainer);
+	details.appendChild(graphContainer);
+
+	return details;
+}
+
+function createChartAccordion(result) {
+	if (result.interactive) {
+		// plotly has been used
+		return _createPlotlyAccordion(result.result)
+	} else {
+		// matplotlib has been used
+		return _createMatplotlibAccordion(result.result)
+	}
 }
 
 function createErrorModal(heading, content) {
@@ -243,7 +277,7 @@ async function sendVisualizationRequest() {
 					deleteForm();
 					let container = document.querySelector(".form-container");
 					jsonResp.results.forEach(result => {
-						const accordion = createGraphAccordion(result);
+						const accordion = createChartAccordion(result);
 						container.appendChild(accordion);
 					});
 

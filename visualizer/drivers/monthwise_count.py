@@ -121,7 +121,7 @@ class MonthwiseCountDriver(IVisualizationDriver):
             )
             fig.update_traces(marker_color="skyblue", opacity=0.7)
             fig.add_trace(
-                px.line(x=keys_str, y=values, line_shape="linear", color="orange").data[
+                px.line(x=keys_str, y=values, line_shape="linear").data[
                     0
                 ]
             )
