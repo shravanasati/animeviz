@@ -7,6 +7,8 @@ from pathlib import Path
 import pandas as pd
 from matplotlib.figure import Figure
 from matplotlib import use as plt_use
+import plotly.graph_objects as go
+import plotly.io as pio
 
 
 @dataclass(frozen=True)
@@ -21,9 +23,10 @@ class VisualizationOptions:
 
 
 @dataclass(frozen=True)
-class VisualizationResult:
+class MatplotlibVisualizationResult:
     """
-    Represents a visualization result. The image is of type `str` and must be a base64 string.
+    Represents a visualization result of a chart rendered by matplotlib.
+    The image is of type `str` and must be a base64 string.
     """
 
     title: str
@@ -31,6 +34,23 @@ class VisualizationResult:
 
     def as_dict(self):
         return asdict(self)
+
+
+@dataclass(frozen=True)
+class PlotlyVisualizationResult:
+    """
+    Represents a visualization result of a chart rendered by plotly.
+    The figure is of type `plotly.graph_objects.Figure`.
+    """
+
+    title: str
+    figure: go.Figure
+
+    def as_dict(self):
+        """
+        Converts this dataclass to a dictionary, with figure converted to JSON.
+        """
+        return {"title": self.title, "figure": pio.to_json(self.figure)}
 
 
 class IVisualizationDriver(ABC):
@@ -71,7 +91,7 @@ class IVisualizationDriver(ABC):
         return image
 
     @abstractmethod
-    def visualize(self) -> VisualizationResult:
+    def visualize(self) -> MatplotlibVisualizationResult | PlotlyVisualizationResult:
         """
         The visualize method contains the code for using matplotlib to render a chart and wrap it
         with a VisualizationResult.

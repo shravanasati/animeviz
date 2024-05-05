@@ -1,20 +1,36 @@
 from collections import Counter
 
 import matplotlib.pyplot as plt
+import pandas as pd
+import plotly.express as px
 
-from .base import IVisualizationDriver, VisualizationResult
+from .base import IVisualizationDriver, MatplotlibVisualizationResult, PlotlyVisualizationResult
 
 
 class GenreDistributionDriver(IVisualizationDriver):
-    def visualize(self) -> VisualizationResult:
+    def visualize(self):
         if len(self.df) == 0:
-            return VisualizationResult(
+            return MatplotlibVisualizationResult(
                 "Genre Distribution", self.get_not_enough_data_image()
             )
 
         genres = self.get_genre_count()
 
-        # pie chart
+        if self.opts.interactive_charts:
+            #  plotly code
+            df_plottable = pd.DataFrame(genres.items(), columns=["Genre", "Percentage"])
+
+            fig = px.pie(
+                df_plottable,
+                values="Percentage",
+                names="Genre",
+                title="Anime Genre Distribution",
+                hole=0.1,
+                labels={"Percentage": "Percentage"},
+            )
+            return PlotlyVisualizationResult("Genre Distribution", fig)
+
+        # matplotlib code
         fig, ax = plt.subplots()
         ax.axis("equal")
         ax.set_title("Anime Genre Distribution")
@@ -29,7 +45,7 @@ class GenreDistributionDriver(IVisualizationDriver):
             pctdistance=0.6,
         )
 
-        return VisualizationResult(
+        return MatplotlibVisualizationResult(
             "Genre Distribution", self.b64_image_from_plt_fig(fig)
         )
 

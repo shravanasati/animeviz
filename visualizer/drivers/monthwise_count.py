@@ -3,8 +3,13 @@ from datetime import date
 import pandas as pd
 import pendulum
 from matplotlib import pyplot as plt
+import plotly.express as px
 
-from .base import IVisualizationDriver, VisualizationResult
+from .base import (
+    IVisualizationDriver,
+    MatplotlibVisualizationResult,
+    PlotlyVisualizationResult,
+)
 
 
 class _MonthYear:
@@ -43,18 +48,14 @@ class _MonthYear:
 
 
 class MonthwiseCountDriver(IVisualizationDriver):
-    def visualize(self) -> VisualizationResult:
+    def visualize(self):
         # todo rewrite this shit
-        # flag to skip adjusting data for multiple months discrepancy
-        # todo what about these flags
-        SKIP_ADJUST = False
-        AVERAGE = True
 
         # get a set of unique month-year combinations
         df = self.df[self.df["my_start_date"] != "0000-00-00"]
 
         if len(df) == 0:
-            return VisualizationResult(
+            return MatplotlibVisualizationResult(
                 "Monthwise Count", self.get_not_enough_data_image()
             )
 
@@ -71,10 +72,6 @@ class MonthwiseCountDriver(IVisualizationDriver):
 
             start_date = _MonthYear(row["my_start_date"])
             end_date = _MonthYear(date.today())
-
-            if SKIP_ADJUST:
-                data[start_date] += int(row["my_watched_episodes"])
-                continue
 
             if row["my_finish_date"] != "0000-00-00":
                 end_date = _MonthYear.fromisoformat(row["my_finish_date"])
@@ -105,25 +102,44 @@ class MonthwiseCountDriver(IVisualizationDriver):
                     except KeyError:
                         data[_MonthYear(m)] = int(days_in_month * episodes_per_day)
 
-        fig, ax = plt.subplots()
-        ax.set_title("Number of anime episodes watched per month")
-        if AVERAGE:
-            ax.set_ylabel("Number of episodes watched (on daily average)")
-            for k, v in data.items():
-                data[k] = round(v / k.days_in_month, 2)
-        else:
-            ax.set_ylabel("Number of episodes watched")
+        for k, v in data.items():
+            data[k] = round(v / k.days_in_month, 2)
 
-        ax.set_xlabel("Months")
         keys = sorted(data.keys())[-12:]
         values = [data[k] for k in keys]
         keys_str = [str(i) for i in keys]
+
+        if self.opts.interactive_charts:
+            # plotly code
+            fig = px.bar(
+                x=keys_str,
+                y=values,
+                labels={
+                    "x": "Months",
+                    "y": "Number of episodes watched (on daily average)",
+                },
+            )
+            fig.update_traces(marker_color="skyblue", opacity=0.7)
+            fig.add_trace(
+                px.line(x=keys_str, y=values, line_shape="linear", color="orange").data[
+                    0
+                ]
+            )
+            fig.update_xaxes(tickangle=45)
+
+            return PlotlyVisualizationResult("Monthwise Count", fig)
+
+        # matplotlib code
+        fig, ax = plt.subplots()
+        ax.set_title("Number of anime episodes watched per month")
+        ax.set_ylabel("Number of episodes watched (on daily average)")
+        ax.set_xlabel("Months")
         bar = ax.bar(keys_str, values, alpha=0.7, color="skyblue")
         ax.plot(keys_str, values, color="orange")
         fig.autofmt_xdate()  # rotate the xticks for better readability
         ax.bar_label(bar)
 
-        result = VisualizationResult(
+        result = MatplotlibVisualizationResult(
             "Monthwise Count", self.b64_image_from_plt_fig(fig)
         )
 

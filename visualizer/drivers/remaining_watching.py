@@ -1,7 +1,9 @@
 from matplotlib import pyplot as plt
 import numpy as np
+import pandas as pd
+import plotly.express as px
 
-from .base import IVisualizationDriver, VisualizationResult
+from .base import IVisualizationDriver, MatplotlibVisualizationResult, PlotlyVisualizationResult
 
 
 def trim_anime_title(name: str, max_name_length: int = 10):
@@ -9,11 +11,11 @@ def trim_anime_title(name: str, max_name_length: int = 10):
 
 
 class RemainingCountDriver(IVisualizationDriver):
-    def visualize(self) -> VisualizationResult:
+    def visualize(self):
         df = self.df[self.df["my_status"] == "Watching"]
         anime_names = df["series_title"].apply(trim_anime_title)
         if len(anime_names) == 0:
-            return VisualizationResult(
+            return MatplotlibVisualizationResult(
                 "Remaining Watching Content", self.get_not_enough_data_image()
             )
         watched = df["my_watched_episodes"]
@@ -27,6 +29,42 @@ class RemainingCountDriver(IVisualizationDriver):
 
         category_names = ("watched", "remaining")
 
+        if self.opts.interactive_charts:
+            # plotly code
+            data = pd.DataFrame(results).T
+            data_cum = data.cumsum(axis=1)
+
+            fig = px.bar(
+                data,
+                orientation="h",
+                labels={"index": "Anime Names", "value": "Episode Count"},
+            )
+            fig.update_layout(
+                title="Remaining Watching Content",
+                xaxis_title="Episode Count",
+                yaxis_title="Anime Names",
+            )
+            fig.update_traces(marker_color=px.colors.sequential.Hot, opacity=0.7)
+
+            for i, (colname, color) in enumerate(
+                zip(category_names, px.colors.sequential.Hot)
+            ):
+                fig.add_trace(
+                    px.bar(
+                        data,
+                        x=data_cum[colname],
+                        y=data.index,
+                        orientation="h",
+                        hover_name=colname,
+                        color=color
+                    ).data[0]
+                )
+
+            fig.update_xaxes(tickangle=52)
+
+            return PlotlyVisualizationResult("Remaining Watching Content", fig)
+
+        # matplotlib code
         data = np.array(list(results.values()))
         data_cum = data.cumsum(axis=1)
         category_colors = plt.colormaps["summer"](
@@ -61,6 +99,6 @@ class RemainingCountDriver(IVisualizationDriver):
             loc="lower left",
             fontsize="small",
         )
-        return VisualizationResult(
+        return MatplotlibVisualizationResult(
             "Remaining Watching Content", self.b64_image_from_plt_fig(fig)
         )

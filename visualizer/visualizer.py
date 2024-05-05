@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
@@ -8,8 +9,9 @@ from dotenv import load_dotenv
 from .api_helper import get_anime_genres
 from .drivers.base import (
     IVisualizationDriver,
+    PlotlyVisualizationResult,
     VisualizationOptions,
-    VisualizationResult,
+    MatplotlibVisualizationResult,
 )
 from .drivers.courwise_ratings import CourwiseRatingsDriver
 from .drivers.genre_distribution import GenreDistributionDriver
@@ -23,6 +25,20 @@ from .drivers.fastest_finished import FastestFinishedDriver
 load_dotenv("./credentials.env")
 
 MAX_ANIME_SEARCH_THREADS = int(os.environ["MAX_ANIME_SEARCH_THREADS"])
+
+
+@dataclass(frozen=True)
+class VisualizationResult:
+    """
+    A generic data class which wraps around `MatplotlibVisualizationResult`
+    and `PlotlyVisualizationResult` and is ultimately returned to the frontend.
+    """
+
+    interactive: bool
+    result: MatplotlibVisualizationResult | PlotlyVisualizationResult
+
+    def as_dict(self):
+        return {"interactive": self.interactive, "result": self.result.as_dict()}
 
 
 class Visualizer:
@@ -46,7 +62,7 @@ class Visualizer:
             RatingsCurveDriver(self.df, self.opts),
             RemainingCountDriver(self.df, self.opts),
             FormatDistributionDriver(self.df, self.opts),
-            FastestFinishedDriver(self.df, self.opts)
+            FastestFinishedDriver(self.df, self.opts),
         ]
 
     @classmethod
@@ -63,7 +79,15 @@ class Visualizer:
         for d in self.drivers:
             try:
                 r = d.visualize()
-                results.append(r)
+                if isinstance(r, MatplotlibVisualizationResult):
+                    interactive = False
+                elif isinstance(r, PlotlyVisualizationResult):
+                    interactive = True
+                else:
+                    raise Exception(f"Unknown visualization result type: {r=}")
+
+                generic_result = VisualizationResult(interactive, r)
+                results.append(generic_result)
             except Exception as e:
                 logging.error(f"error occured while visualizing {d.__class__}")
                 logging.exception(e)

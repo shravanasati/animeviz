@@ -1,15 +1,17 @@
 from matplotlib import pyplot as plt
+import pandas as pd
+import plotly.express as px
 
-from .base import IVisualizationDriver, VisualizationResult
+from .base import IVisualizationDriver, MatplotlibVisualizationResult, PlotlyVisualizationResult
 
 
 class GenrewiseRatingsDriver(IVisualizationDriver):
-    def visualize(self) -> VisualizationResult:
+    def visualize(self):
         df = self.df[
             (self.df["my_status"] != "Plan to Watch") & (self.df["my_score"] != 0)
         ]
         if len(df) == 0:
-            return VisualizationResult(
+            return MatplotlibVisualizationResult(
                 "Genrewise Ratings", self.get_not_enough_data_image()
             )
 
@@ -36,6 +38,22 @@ class GenrewiseRatingsDriver(IVisualizationDriver):
         }
         plottable_data = dict(sorted(average_data.items(), key=lambda x: x[1]))
 
+        if self.opts.interactive_charts:
+            # plotly code
+            df_plottable = pd.DataFrame(
+                plottable_data.items(), columns=["Genres", "Average Rating"]
+            )
+
+            fig = px.bar(
+                df_plottable,
+                x="Genres",
+                y="Average Rating",
+                title="Average rating of anime per genre",
+            )
+
+            return PlotlyVisualizationResult("Genrewise Ratings", fig)
+
+        # matplotlib code
         fig, ax = plt.subplots()
         ax.set_title("Average rating of anime per genre")
         ax.set_xlabel("Genres")
@@ -45,6 +63,6 @@ class GenrewiseRatingsDriver(IVisualizationDriver):
         ax.bar_label(bar)
         fig.autofmt_xdate()
 
-        return VisualizationResult(
+        return MatplotlibVisualizationResult(
             "Genrewise Ratings", self.b64_image_from_plt_fig(fig)
         )

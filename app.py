@@ -308,6 +308,7 @@ def visualize():
             viz = Visualizer.from_xml(xml_buf, opts)
             results = viz.visualize_all()
             results_json = [r.as_dict() for r in results]
+            del viz
             return {
                 "success": True,
                 "message": "All visualizations drawn successfully.",
@@ -317,9 +318,20 @@ def visualize():
         except ET.ParseError:
             return {
                 "success": False,
-                "message": "unable to parse the animelist.xml file",
+                "message": "Unable to parse the animelist.xml file",
                 "results": [],
             }
+
+        except Exception as e:
+            logging.exception(e)
+            return {
+                "success": False,
+                "message": "An unknown error occured. Please try again later.",
+                "results": [],
+            }
+
+        finally:
+            gc.collect()
 
     else:
         if not current_user.is_authenticated:
@@ -368,7 +380,11 @@ def visualize():
         except Exception as e:
             logging.error("cant get user animelist")
             logging.exception(e)
-            abort(500)
+            return {
+                "success": False,
+                "message": "An unknown error occured. Please try again later.",
+                "results": [],
+            }
 
         finally:
             # todo fix memory leaks

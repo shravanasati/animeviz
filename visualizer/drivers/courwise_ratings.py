@@ -5,8 +5,9 @@ from enum import Enum
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+import plotly.express as px
 
-from .base import IVisualizationDriver, VisualizationResult
+from .base import IVisualizationDriver, MatplotlibVisualizationResult, PlotlyVisualizationResult
 
 
 class CourSeason(Enum):
@@ -51,10 +52,10 @@ def get_cour_from_datetime(d: datetime):
 
 
 class CourwiseRatingsDriver(IVisualizationDriver):
-    def visualize(self) -> VisualizationResult:
+    def visualize(self):
         df = self.df[self.df["my_start_date"] != "0000-00-00"]
         if len(df) == 0:
-            return VisualizationResult(
+            return MatplotlibVisualizationResult(
                 "Courwise Ratings", self.get_not_enough_data_image()
             )
 
@@ -86,6 +87,23 @@ class CourwiseRatingsDriver(IVisualizationDriver):
             if sum(v) != 0
         }
 
+        if self.opts.interactive_charts:
+            # plotly code
+            df_plottable = pd.DataFrame(
+                quarter_percentages.items(), columns=["Quarter", "Percentages"]
+            )
+
+            fig = px.bar(
+                df_plottable,
+                x="Quarter",
+                y=["Percentages[0]", "Percentages[1]", "Percentages[2]"],
+                title="Ratings Distribution of Anime Each Season",
+                labels={"value": "Percentage"},
+                color_discrete_sequence=["red", "yellow", "green"],
+            )
+            return PlotlyVisualizationResult("Courwise Ratings", fig)
+
+        # matplotlib code
         cours = quarter_percentages.keys()
         keys = sorted(cours)[-12:]
         values = [quarter_percentages[k] for k in keys]
@@ -131,7 +149,7 @@ class CourwiseRatingsDriver(IVisualizationDriver):
         ax.legend(fancybox=True, framealpha=0.5)
         fig.autofmt_xdate()
 
-        result = VisualizationResult(
+        result = MatplotlibVisualizationResult(
             "Courwise Ratings", self.b64_image_from_plt_fig(fig)
         )
 

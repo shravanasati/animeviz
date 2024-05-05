@@ -23,6 +23,7 @@ flask-limiter = {extras = ["redis"], version = "^3.5.1"}
 gunicorn = "^22.0.0"
 flask-turnstile = "^0.1.1"
 gevent = "^24.2.1"
+plotly = "^5.22.0"
 
 
 [build-system]
