@@ -2,8 +2,8 @@ from datetime import date
 
 import pandas as pd
 import pendulum
-from matplotlib import pyplot as plt
 import plotly.express as px
+from matplotlib import pyplot as plt
 
 from .base import (
     IVisualizationDriver,
@@ -120,11 +120,7 @@ class MonthwiseCountDriver(IVisualizationDriver):
                 },
             )
             fig.update_traces(marker_color="skyblue", opacity=0.7)
-            fig.add_trace(
-                px.line(x=keys_str, y=values, line_shape="linear").data[
-                    0
-                ]
-            )
+            fig.add_trace(px.line(x=keys_str, y=values, line_shape="linear").data[0])
             fig.update_xaxes(tickangle=45)
 
             return PlotlyVisualizationResult("Monthwise Count", fig)

@@ -1,7 +1,7 @@
-from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.express as px
+from matplotlib import pyplot as plt
 
 from .base import (
     IVisualizationDriver,
@@ -40,7 +40,6 @@ class RemainingCountDriver(IVisualizationDriver):
             )
             data.reset_index(inplace=True)
             data.rename(columns={"index": "names"}, inplace=True)
-            print(data)
 
             fig = px.bar(
                 data,

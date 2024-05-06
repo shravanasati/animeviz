@@ -1,9 +1,14 @@
 import heapq
-import pandas as pd
+
 import matplotlib.pyplot as plt
+import pandas as pd
 import plotly.express as px
 
-from .base import IVisualizationDriver, MatplotlibVisualizationResult, PlotlyVisualizationResult
+from .base import (
+    IVisualizationDriver,
+    MatplotlibVisualizationResult,
+    PlotlyVisualizationResult,
+)
 from .remaining_watching import trim_anime_title
 
 

@@ -1,7 +1,7 @@
-from dataclasses import dataclass
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -9,18 +9,18 @@ from dotenv import load_dotenv
 from .api_helper import get_anime_genres
 from .drivers.base import (
     IVisualizationDriver,
+    MatplotlibVisualizationResult,
     PlotlyVisualizationResult,
     VisualizationOptions,
-    MatplotlibVisualizationResult,
 )
 from .drivers.courwise_ratings import CourwiseRatingsDriver
+from .drivers.fastest_finished import FastestFinishedDriver
+from .drivers.format_distribution import FormatDistributionDriver
 from .drivers.genre_distribution import GenreDistributionDriver
 from .drivers.genre_ratings import GenrewiseRatingsDriver
 from .drivers.monthwise_count import MonthwiseCountDriver
 from .drivers.ratings_curve import RatingsCurveDriver
 from .drivers.remaining_watching import RemainingCountDriver
-from .drivers.format_distribution import FormatDistributionDriver
-from .drivers.fastest_finished import FastestFinishedDriver
 
 load_dotenv("./credentials.env")
 

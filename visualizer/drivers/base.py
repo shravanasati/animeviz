@@ -2,13 +2,13 @@ import base64
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 from io import BytesIO
-
 from pathlib import Path
+
 import pandas as pd
-from matplotlib.figure import Figure
-from matplotlib import use as plt_use
 import plotly.graph_objects as go
 import plotly.io as pio
+from matplotlib import use as plt_use
+from matplotlib.figure import Figure
 
 
 @dataclass(frozen=True)

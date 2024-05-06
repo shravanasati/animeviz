@@ -4,10 +4,14 @@ from enum import Enum
 
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
 import plotly.express as px
+from matplotlib import pyplot as plt
 
-from .base import IVisualizationDriver, MatplotlibVisualizationResult, PlotlyVisualizationResult
+from .base import (
+    IVisualizationDriver,
+    MatplotlibVisualizationResult,
+    PlotlyVisualizationResult,
+)
 
 
 class CourSeason(Enum):
@@ -89,7 +93,9 @@ class CourwiseRatingsDriver(IVisualizationDriver):
 
         if self.opts.interactive_charts:
             # plotly code
-            df_plottable = pd.DataFrame.from_dict(quarter_percentages, orient="index", columns=["bad", "average", "good"])
+            df_plottable = pd.DataFrame.from_dict(
+                quarter_percentages, orient="index", columns=["bad", "average", "good"]
+            )
             df_plottable.reset_index(inplace=True)
             df_plottable.rename(columns={"index": "cours"}, inplace=True)
             df_plottable["cours"] = df_plottable["cours"].astype(str)
@@ -99,7 +105,10 @@ class CourwiseRatingsDriver(IVisualizationDriver):
                 x="cours",
                 y=["bad", "average", "good"],
                 title="Ratings Distribution of Anime Each Season",
-                labels={"x": "Cours", "y": "Bad [1,4], Average [5,7] and Good [8,10] Rating Percentages"},
+                labels={
+                    "x": "Cours",
+                    "y": "Bad [1,4], Average [5,7] and Good [8,10] Rating Percentages",
+                },
                 color_discrete_sequence=["red", "yellow", "green"],
             )
             return PlotlyVisualizationResult("Courwise Ratings", fig)

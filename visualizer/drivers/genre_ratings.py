@@ -1,8 +1,12 @@
-from matplotlib import pyplot as plt
 import pandas as pd
 import plotly.express as px
+from matplotlib import pyplot as plt
 
-from .base import IVisualizationDriver, MatplotlibVisualizationResult, PlotlyVisualizationResult
+from .base import (
+    IVisualizationDriver,
+    MatplotlibVisualizationResult,
+    PlotlyVisualizationResult,
+)
 
 
 class GenrewiseRatingsDriver(IVisualizationDriver):

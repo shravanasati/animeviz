@@ -4,7 +4,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import plotly.express as px
 
-from .base import IVisualizationDriver, MatplotlibVisualizationResult, PlotlyVisualizationResult
+from .base import (
+    IVisualizationDriver,
+    MatplotlibVisualizationResult,
+    PlotlyVisualizationResult,
+)
 
 
 class GenreDistributionDriver(IVisualizationDriver):

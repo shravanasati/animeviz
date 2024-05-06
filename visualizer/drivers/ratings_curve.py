@@ -1,8 +1,13 @@
 from collections import Counter
-from matplotlib import pyplot as plt
-import plotly.express as px
 
-from .base import IVisualizationDriver, MatplotlibVisualizationResult, PlotlyVisualizationResult
+import plotly.express as px
+from matplotlib import pyplot as plt
+
+from .base import (
+    IVisualizationDriver,
+    MatplotlibVisualizationResult,
+    PlotlyVisualizationResult,
+)
 
 
 class RatingsCurveDriver(IVisualizationDriver):
