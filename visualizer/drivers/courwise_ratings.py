@@ -68,7 +68,7 @@ class CourwiseRatingsDriver(IVisualizationDriver):
         # Resample the DataFrame based on quarters
         quarterly_groups = df.resample("QE")
 
-        quarter_ratings = {}
+        quarter_ratings: dict[Cour, tuple[int, int, int]] = {}
 
         # Perform any desired operations on the quarterly groups
         for quarter, group in quarterly_groups:
@@ -89,17 +89,19 @@ class CourwiseRatingsDriver(IVisualizationDriver):
 
         if self.opts.interactive_charts:
             # plotly code
-            df_plottable = pd.DataFrame(
-                quarter_percentages.items(), columns=["Quarter", "Percentages"]
-            )
+            df_plottable = pd.DataFrame.from_dict(quarter_percentages, orient="index", columns=["bad", "average", "good"])
+            df_plottable.reset_index(inplace=True)
+            df_plottable.rename(columns={"index": "cours"}, inplace=True)
+            df_plottable["cours"] = df_plottable["cours"].astype(str)
 
+            # todo set x and y labels
             fig = px.bar(
                 df_plottable,
-                x="Quarter",
-                y=["Percentages[0]", "Percentages[1]", "Percentages[2]"],
+                x="cours",
+                y=["bad", "average", "good"],
                 title="Ratings Distribution of Anime Each Season",
-                labels={"value": "Percentage"},
-                color_discrete_sequence=["red", "yellow", "green"],
+                # labels={"value": "Percentage"},
+                # color_discrete_sequence=["red", "yellow", "green"],
             )
             return PlotlyVisualizationResult("Courwise Ratings", fig)
 

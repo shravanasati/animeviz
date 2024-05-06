@@ -119,7 +119,14 @@ function _createPlotlyAccordion(result) {
 
 	let renderContainer = document.createElement("div");
 	renderContainer.setAttribute("id", snakeTitle);
-	Plotly.newPlot(renderContainer, figure.data, figure.layout);
+	Plotly.newPlot(renderContainer, figure.data, figure.layout, {
+		toImageButtonOptions: {
+			format: 'png', // one of png, svg, jpeg, webp
+			filename: snakeTitle,
+			scale: 1 // Multiply title/legend/axis/canvas sizes by this factor
+		},
+		displayModeBar: true,
+	});
 
 	details.appendChild(summary);
 	graphContainer.appendChild(renderContainer);

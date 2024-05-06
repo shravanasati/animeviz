@@ -66,6 +66,7 @@ class IVisualizationDriver(ABC):
         self.df = df
         self.opts = opts
         plt_use("agg")
+        # pio.templates.default = "seaborn"
 
     @staticmethod
     def _to_base64(buf: BytesIO):
