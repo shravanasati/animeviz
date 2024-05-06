@@ -177,6 +177,14 @@ function blobFromBase64String(base64String) {
 }
 
 async function downloadAll(results) {
+	// * currently supports matplotlib rendered charts only
+	results = results.filter((r) => !r.interactive);
+	results = results.map((r) => r.result);
+
+	if (!results) {
+		return;
+	}
+
 	const downloadAllBtn = document.createElement("button");
 	downloadAllBtn.style.textAlign = "center";
 	downloadAllBtn.style.width = "fit-content";
