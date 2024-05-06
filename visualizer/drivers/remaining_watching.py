@@ -3,7 +3,11 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 
-from .base import IVisualizationDriver, MatplotlibVisualizationResult, PlotlyVisualizationResult
+from .base import (
+    IVisualizationDriver,
+    MatplotlibVisualizationResult,
+    PlotlyVisualizationResult,
+)
 
 
 def trim_anime_title(name: str, max_name_length: int = 10):
@@ -31,36 +35,22 @@ class RemainingCountDriver(IVisualizationDriver):
 
         if self.opts.interactive_charts:
             # plotly code
-            data = pd.DataFrame(results).T
-            data_cum = data.cumsum(axis=1)
+            data = pd.DataFrame.from_dict(
+                results, orient="index", columns=["watched", "remaining"]
+            )
+            data.reset_index(inplace=True)
+            data.rename(columns={"index": "names"}, inplace=True)
+            print(data)
 
             fig = px.bar(
                 data,
+                x=["watched", "remaining"],
+                y="names",
                 orientation="h",
-                labels={"index": "Anime Names", "value": "Episode Count"},
+                title="Watched vs Remaining Episodes",
+                color_discrete_sequence=px.colors.qualitative.Set3,
+                labels={"value": "Episode Count", "y": "Anime Names"},
             )
-            fig.update_layout(
-                title="Remaining Watching Content",
-                xaxis_title="Episode Count",
-                yaxis_title="Anime Names",
-            )
-            fig.update_traces(marker_color=px.colors.sequential.Hot, opacity=0.7)
-
-            for i, (colname, color) in enumerate(
-                zip(category_names, px.colors.sequential.Hot)
-            ):
-                fig.add_trace(
-                    px.bar(
-                        data,
-                        x=data_cum[colname],
-                        y=data.index,
-                        orientation="h",
-                        hover_name=colname,
-                        color=color
-                    ).data[0]
-                )
-
-            fig.update_xaxes(tickangle=52)
 
             return PlotlyVisualizationResult("Remaining Watching Content", fig)
 

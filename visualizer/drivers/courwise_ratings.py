@@ -94,14 +94,13 @@ class CourwiseRatingsDriver(IVisualizationDriver):
             df_plottable.rename(columns={"index": "cours"}, inplace=True)
             df_plottable["cours"] = df_plottable["cours"].astype(str)
 
-            # todo set x and y labels
             fig = px.bar(
                 df_plottable,
                 x="cours",
                 y=["bad", "average", "good"],
                 title="Ratings Distribution of Anime Each Season",
-                # labels={"value": "Percentage"},
-                # color_discrete_sequence=["red", "yellow", "green"],
+                labels={"x": "Cours", "y": "Bad [1,4], Average [5,7] and Good [8,10] Rating Percentages"},
+                color_discrete_sequence=["red", "yellow", "green"],
             )
             return PlotlyVisualizationResult("Courwise Ratings", fig)
 
