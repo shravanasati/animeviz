@@ -19,18 +19,24 @@ class GenreDistributionDriver(IVisualizationDriver):
             )
 
         genres = self.get_genre_count()
+        total = sum(genres.values())
 
         if self.opts.interactive_charts:
             #  plotly code
-            df_plottable = pd.DataFrame(genres.items(), columns=["Genre", "Percentage"])
+            df_plottable = pd.DataFrame(genres.items(), columns=["Genre", "Count"])
+            df_plottable.loc[:, "Percentage"] = df_plottable["Count"] / total * 100
+            df_plottable.loc[:, "Percentage"] = df_plottable.loc[:, "Percentage"].apply(
+                lambda x: round(x, 2)
+            )
 
             fig = px.pie(
                 df_plottable,
-                values="Percentage",
+                values="Count",
                 names="Genre",
                 title="Anime Genre Distribution",
                 hole=0.1,
                 labels={"Percentage": "Percentage"},
+                hover_data=["Percentage"],
             )
             return PlotlyVisualizationResult("Genre Distribution", fig)
 

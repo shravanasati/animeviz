@@ -37,6 +37,13 @@ class FormatDistributionDriver(IVisualizationDriver):
         if self.opts.interactive_charts:
             # pie chart using plotly
             df_plottable = pd.DataFrame(formats.items(), columns=["Format", "Count"])
+            total = df_plottable["Count"].sum()
+            df_plottable.loc[:, "Percentage"] = (
+                df_plottable.loc[:, "Count"] / total * 100
+            )
+            df_plottable.loc[:, "Percentage"] = df_plottable.loc[:, "Percentage"].apply(
+                lambda x: round(x, 2)
+            )
 
             fig = px.pie(
                 df_plottable,
@@ -44,7 +51,8 @@ class FormatDistributionDriver(IVisualizationDriver):
                 names="Format",
                 title="Format Distribution",
                 hole=0.1,
-                labels={"Count": "Percentage"},
+                labels={"Percentage": "Percentage"},
+                hover_data=["Percentage"]
             )
             fig.update_traces(textposition="inside", textinfo="percent+label")
             return PlotlyVisualizationResult("Format Distribution", fig)
