@@ -109,7 +109,7 @@ class CourwiseRatingsDriver(IVisualizationDriver):
                     "x": "Cours",
                     "y": "Bad [1,4], Average [5,7] and Good [8,10] Rating Percentages",
                 },
-                color_discrete_sequence=["red", "yellow", "green"],
+                color_discrete_sequence=["#e03c32", "#ffd301", "#7bb662"],
             )
             return PlotlyVisualizationResult("Courwise Ratings", fig)
 

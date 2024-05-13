@@ -37,16 +37,16 @@ class FastestFinishedDriver(IVisualizationDriver):
             df["my_finish_date"], format="ISO8601"
         )
 
-        df.loc[:, "episode_day_ratio"] = df["my_finish_date"] - df["my_start_date"]
-        df.loc[:, "episode_day_ratio"] = df["episode_day_ratio"].apply(
+        df.loc[:, "episode_day_ratio"] = df.loc[:, "my_finish_date"] - df.loc[:, "my_start_date"]
+        df.loc[:, "episode_day_ratio"] = df.loc[:, "episode_day_ratio"].apply(
             lambda x: x.days if x.days > 0 else 1
         )
         df.loc[:, "episode_day_ratio"] = (
-            df["my_watched_episodes"] / df["episode_day_ratio"]
+            df.loc[:, "my_watched_episodes"] / df.loc[:, "episode_day_ratio"]
         )
 
         fastest_finished_tuple = heapq.nlargest(
-            8, zip(df["series_title"], df["episode_day_ratio"]), key=lambda t: t[1]
+            10, zip(df["series_title"], df["episode_day_ratio"]), key=lambda t: t[1]
         )
         fastest_finished_titles = [
             trim_anime_title(t[0], 15) for t in fastest_finished_tuple

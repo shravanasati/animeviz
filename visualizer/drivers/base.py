@@ -8,7 +8,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.io as pio
 from matplotlib import use as plt_use
-from matplotlib.figure import Figure
+from matplotlib.figure import Figure as PltFigure
 
 
 @dataclass(frozen=True)
@@ -50,6 +50,9 @@ class PlotlyVisualizationResult:
         """
         Converts this dataclass to a dictionary, with figure converted to JSON.
         """
+        # add modebar before converting to dictionary
+        # todo dirty fix, but works for now
+        self.figure.update_layout(modebar_add=["v1hovermode", "toggleSpikeLines"])
         return {"title": self.title, "figure": pio.to_json(self.figure)}
 
 
@@ -81,7 +84,7 @@ class IVisualizationDriver(ABC):
             image_b64 = base64.b64encode(img.read()).decode("utf-8")
         return image_b64
 
-    def b64_image_from_plt_fig(self, fig: Figure):
+    def b64_image_from_plt_fig(self, fig: PltFigure):
         """
         Takes a matplotlib `Figure` and returns a decoded base64 image.
         """
