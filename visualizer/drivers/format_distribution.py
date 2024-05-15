@@ -52,7 +52,7 @@ class FormatDistributionDriver(IVisualizationDriver):
                 title="Format Distribution",
                 hole=0.1,
                 labels={"Percentage": "Percentage"},
-                hover_data=["Percentage"]
+                hover_data=["Percentage"],
             )
             fig.update_traces(textposition="inside", textinfo="percent+label")
             return PlotlyVisualizationResult("Format Distribution", fig)

@@ -37,7 +37,9 @@ class FastestFinishedDriver(IVisualizationDriver):
             df["my_finish_date"], format="ISO8601"
         )
 
-        df.loc[:, "episode_day_ratio"] = df.loc[:, "my_finish_date"] - df.loc[:, "my_start_date"]
+        df.loc[:, "episode_day_ratio"] = (
+            df.loc[:, "my_finish_date"] - df.loc[:, "my_start_date"]
+        )
         df.loc[:, "episode_day_ratio"] = df.loc[:, "episode_day_ratio"].apply(
             lambda x: x.days if x.days > 0 else 1
         )
