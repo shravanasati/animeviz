@@ -73,7 +73,7 @@ limiter = Limiter(
     app=app,
     headers_enabled=True,
     storage_uri=os.environ["FLASK_LIMITER_STORAGE_URI"],
-    default_limits=["60/minute", "1/second"],
+    default_limits=["120/minute", "2/second"],
 )
 
 turnstile = Turnstile(
@@ -266,7 +266,7 @@ def visualize_page():
 
 
 @app.post("/visualize")
-@limiter.limit("6/minute;1/10second")
+@limiter.limit("10/minute;1/6second")
 def visualize():
     if not turnstile.verify():
         # print("cpatcha verification failed")

@@ -3,10 +3,9 @@ browser: firefox
 include_only: ["*.py", "*.html", "*.css", "*.js"]
 poll_interval: 200
 browser_wait_interval: 500
-follow_symlinks: false
 scripts:
 - name: default
-  url: 'localhost:5000'
+  url: 'http://localhost:5000'
   command: "flask --app app run"
   shell: false
 
