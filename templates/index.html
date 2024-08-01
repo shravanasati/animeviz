@@ -21,7 +21,7 @@
 
 <div class="index-container center-container" data-theme="light">
 	{% if current_user and current_user.is_authenticated %}
-	<h1 class="hero-text">Welcome <u>{{current_user.name}}</u></h1>
+	<h1 class="hero-text" style="margin-top: 3rem;">Welcome <u>{{current_user.name}}</u></h1>
 	<br><br>
 	<a href="/visualize" role="button" class="btn">Visualize your data</a>
 	{% else %}
