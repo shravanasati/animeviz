@@ -10,6 +10,7 @@ from .base import (
 
 
 class GenrewiseRatingsDriver(IVisualizationDriver):
+    # todo consider using a scatter plot
     def visualize(self):
         df = self.df[
             (self.df["my_status"] != "Plan to Watch") & (self.df["my_score"] != 0)

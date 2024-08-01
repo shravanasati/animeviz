@@ -5,11 +5,14 @@
 {%block head%}
 {{super()}}
 <style>
-	body {
-		background-image: url("{{url_for('static', filename='assets/background.webp')}}");
-		background-repeat: no-repeat;
-		background-attachment: fixed;
-		background-size: cover;
+	.hero-text {
+		font-size: 3rem;
+		color: aliceblue;
+	}
+
+	.subtitle {
+		color: aliceblue;
+		margin: 1rem;
 	}
 </style>
 {%endblock%}
@@ -18,17 +21,18 @@
 
 <div class="index-container center-container" data-theme="light">
 	{% if current_user and current_user.is_authenticated %}
-		<h1>Welcome <u>{{current_user.name}}</u></h1>
-		<br><br>
-		<a href="/visualize" role="button" class="btn">Visualize your data</a>
+	<h1>Welcome <u>{{current_user.name}}</u></h1>
+	<br><br>
+	<a href="/visualize" role="button" class="btn">Visualize your data</a>
 	{% else %}
-		<h1 class=".heading">Visualise your MyAnimeList data effortlessly!</h1>
-		<p style="color: rgb(132, 17, 82);"><mark>Your anime lists finally have a purpose.</mark></p>
-		<h3 class=".heading" style="margin: 0.5em 1em; color: rgb(0, 0, 0)">Get Started by</h3>
-		<a href="/login/myanimelist" role="button" class="btn">Logging in</a>
-		<p style="margin-bottom: auto; color: black;">OR</p>
-		<a href="/visualize" role="button" class="btn">Upload the exported animelist.xml</a>
+
+	<h1 class="hero-text">Visualise your MyAnimeList data effortlessly!</h1>
+	<!-- <p style="color: rgb(132, 17, 82);"><mark>Your anime lists finally have a purpose.</mark></p> -->
+	<h4 class="subtitle">Get Started by</h4>
+	<a href="/login/myanimelist" role="button" class="btn">Logging in</a>
+	<p style="margin: 0.35rem; color: aliceblue;">OR</p>
+	<a href="/visualize" role="button" class="btn">Upload the exported animelist.xml</a>
 	{% endif %}
 
-</div>
-{%endblock%}
+	</div>
+	{%endblock%}
