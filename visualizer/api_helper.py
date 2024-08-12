@@ -153,7 +153,7 @@ def build_df_from_mal_api_data(data: list):
                 "series_animedb_id": node["id"],
                 "series_title": node["title"],
                 "series_episodes": node["num_episodes"],
-                "series_type": compatible_formats[node["media_type"]],
+                "series_type": compatible_formats.get(node["media_type"], "unknown"),
                 "my_watched_episodes": user_status["num_episodes_watched"],
                 "my_status": compatible_status[user_status["status"]],
                 "my_start_date": user_status.get("start_date") or "0000-00-00",
