@@ -119,6 +119,7 @@ function _createPlotlyAccordion(result) {
 
 	let renderContainer = document.createElement("div");
 	renderContainer.setAttribute("id", snakeTitle);
+	// console.log(figure)
 	Plotly.newPlot(renderContainer, figure.data, figure.layout, {
 		toImageButtonOptions: {
 			format: 'png', // one of png, svg, jpeg, webp
@@ -126,6 +127,7 @@ function _createPlotlyAccordion(result) {
 			scale: 1 // Multiply title/legend/axis/canvas sizes by this factor
 		},
 		displayModeBar: true,
+		responsive: true
 	});
 
 	details.appendChild(summary);
