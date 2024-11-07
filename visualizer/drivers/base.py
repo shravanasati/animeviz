@@ -52,8 +52,8 @@ class PlotlyVisualizationResult:
         """
         # add modebar before converting to dictionary
         # todo dirty fix, but works for now
-        self.figure.update_layout(modebar_add=["v1hovermode", "toggleSpikeLines"])
-        return {"title": self.title, "figure": pio.to_json(self.figure)}
+        fig = self.figure.update_layout(modebar_add=["v1hovermode", "toggleSpikeLines"])
+        return {"title": self.title, "figure": pio.to_json(fig)}
 
 
 class IVisualizationDriver(ABC):

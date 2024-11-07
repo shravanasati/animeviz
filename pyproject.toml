@@ -5,12 +5,13 @@ description = "A website to make beautiful and insightful graphs on your anime l
 authors = ["Shravan Asati <dev.shravan@protonmail.com>"]
 license = "MIT"
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
 flask = "^3.0.1"
 flask-sqlalchemy = "^3.1.1"
-mysql-connector-python = "^8.3.0"
+mysql-connector-python = "^9.1.0"
 python-dotenv = "^1.0.1"
 flask-login = "^0.6.3"
 requests = "^2.31.0"

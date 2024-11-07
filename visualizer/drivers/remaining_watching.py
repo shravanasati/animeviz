@@ -24,10 +24,24 @@ class RemainingCountDriver(IVisualizationDriver):
             )
         watched = df["my_watched_episodes"]
         total_episodes = df["series_episodes"]
-        remaining = total_episodes - watched
+        max_total = total_episodes.max()
+        total_episodes_fixed = total_episodes.apply(lambda x: x if x > 0 else max_total)
+        remaining = total_episodes_fixed - watched
+
+        watched_scaled = watched / total_episodes_fixed * max_total
+        remaining_scaled = remaining / total_episodes_fixed * max_total
+
+        zero_entries = total_episodes[total_episodes == 0].index
+        remaining[zero_entries] = 0
+        remaining_scaled[zero_entries] = 0
 
         results = {
-            anime_names.iloc[i]: [watched.iloc[i], remaining.iloc[i]]
+            anime_names.iloc[i]: [
+                watched.iloc[i],
+                watched_scaled.iloc[i],
+                remaining.iloc[i],
+                remaining_scaled.iloc[i],
+            ]
             for i in range(len(anime_names))
         }
 
@@ -36,19 +50,27 @@ class RemainingCountDriver(IVisualizationDriver):
         if self.opts.interactive_charts:
             # plotly code
             data = pd.DataFrame.from_dict(
-                results, orient="index", columns=["watched", "remaining"]
+                results,
+                orient="index",
+                columns=["watched", "watched_scaled", "remaining", "remaining_scaled"],
             )
             data.reset_index(inplace=True)
             data.rename(columns={"index": "names"}, inplace=True)
 
             fig = px.bar(
                 data,
-                x=["watched", "remaining"],
+                x=["watched_scaled", "remaining_scaled"],
                 y="names",
                 orientation="h",
                 title="Watched vs Remaining Episodes",
                 color_discrete_sequence=px.colors.qualitative.Set3,
-                labels={"value": "Episode Count", "y": "Anime Names"},
+                # hover_data={
+                #     "watched_scaled": False,
+                #     "remaining_scaled": False,
+                #     "remaining": True,
+                #     "watched": True,
+                # },
+                # labels={"value": "Episode Count", "y": "Anime Names"},
             )
 
             return PlotlyVisualizationResult("Remaining Watching Content", fig)
