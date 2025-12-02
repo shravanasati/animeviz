@@ -1,32 +1,33 @@
-[tool.poetry]
+[project]
 name = "animeviz"
 version = "0.1.0"
 description = "A website to make beautiful and insightful graphs on your anime lists."
-authors = ["Shravan Asati <dev.shravan@protonmail.com>"]
-license = "MIT"
+authors = [{ name = "Shravan Asati", email = "dev.shravan@protonmail.com" }]
+requires-python = ">=3.11,<4"
 readme = "README.md"
-package-mode = false
+license = "MIT"
+dependencies = [
+    "flask>=3.0.1,<4",
+    "flask-sqlalchemy>=3.1.1,<4",
+    "mysql-connector-python>=9.1.0,<10",
+    "python-dotenv>=1.0.1,<2",
+    "flask-login>=0.6.3,<0.7",
+    "requests>=2.31.0,<3",
+    "pandas>=2.2.0,<3",
+    "numpy>=1.26.4,<2",
+    "matplotlib>=3.8.2,<4",
+    "lxml>=5.1.0,<6",
+    "pendulum>=3.0.0,<4",
+    "flask-limiter[redis]>=3.5.1,<4",
+    "gunicorn>=23.0.0,<24",
+    "flask-turnstile>=0.1.1,<0.2",
+    "gevent>=24.2.1,<25",
+    "plotly>=5.22.0,<6",
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-flask = "^3.0.1"
-flask-sqlalchemy = "^3.1.1"
-mysql-connector-python = "^9.1.0"
-python-dotenv = "^1.0.1"
-flask-login = "^0.6.3"
-requests = "^2.31.0"
-pandas = "^2.2.0"
-numpy = "^1.26.4"
-matplotlib = "^3.8.2"
-lxml = "^5.1.0"
-pendulum = "^3.0.0"
-flask-limiter = {extras = ["redis"], version = "^3.5.1"}
-gunicorn = "^23.0.0"
-flask-turnstile = "^0.1.1"
-gevent = "^24.2.1"
-plotly = "^5.22.0"
-
+[tool.uv]
+package = false
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
