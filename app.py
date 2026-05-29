@@ -307,12 +307,14 @@ def visualize():
 
             viz = Visualizer.from_xml(xml_buf, opts)
             results = viz.visualize_all()
+            summary = viz.get_summary()
             results_json = [r.as_dict() for r in results]
             del viz
             return {
                 "success": True,
                 "message": "All visualizations drawn successfully.",
                 "results": results_json,
+                "summary": summary,
             }
 
         except ET.ParseError:
@@ -369,12 +371,14 @@ def visualize():
             df = build_df_from_mal_api_data(data)
             viz = Visualizer(df, opts)
             results = viz.visualize_all()
+            summary = viz.get_summary()
             results_json = [r.as_dict() for r in results]
             del viz
             return {
                 "success": True,
                 "message": "All visualizations drawn successfully.",
                 "results": results_json,
+                "summary": summary,
             }
 
         except Exception as e:

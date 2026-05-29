@@ -178,6 +178,60 @@ function blobFromBase64String(base64String) {
 	return blob;
 }
 
+function createSummarySection(summary) {
+	const section = document.createElement("div");
+	section.classList.add("summary-section");
+
+	// Insight Banner
+	const insightBanner = document.createElement("div");
+	insightBanner.classList.add("insight-banner");
+	const insightTitle = document.createElement("div");
+	insightTitle.classList.add("insight-title");
+	insightTitle.innerText = "Monthly Insight";
+	const insightBody = document.createElement("p");
+	insightBody.classList.add("insight-body");
+
+	if (summary.finished_this_month > 0) {
+		insightBody.innerText = `You've finished ${summary.finished_this_month} anime this month! You seem to be into ${summary.favorite_genre} lately.`;
+	} else {
+		insightBody.innerText = "You haven't finished any anime yet this month. Time to clear that backlog!";
+	}
+
+	insightBanner.appendChild(insightTitle);
+	insightBanner.appendChild(insightBody);
+	section.appendChild(insightBanner);
+
+	// KPI Grid
+	const grid = document.createElement("div");
+	grid.classList.add("summary-grid");
+
+	const kpis = [
+		{ label: "Total Anime", value: summary.total_anime },
+		{ label: "Completed", value: summary.completed },
+		{ label: "Episodes", value: summary.total_episodes },
+		{ label: "Mean Score", value: summary.mean_score },
+		{ label: "Days Watched", value: summary.days_watched },
+		{ label: "Hours Watched", value: summary.hours_watched }
+	];
+
+	kpis.forEach(kpi => {
+		const card = document.createElement("div");
+		card.classList.add("summary-card");
+		const val = document.createElement("div");
+		val.classList.add("summary-value");
+		val.innerText = kpi.value;
+		const lab = document.createElement("div");
+		lab.classList.add("summary-label");
+		lab.innerText = kpi.label;
+		card.appendChild(val);
+		card.appendChild(lab);
+		grid.appendChild(card);
+	});
+
+	section.appendChild(grid);
+	return section;
+}
+
 async function downloadAll(results) {
 	// * currently supports matplotlib rendered charts only
 	results = results.filter((r) => !r.interactive);
@@ -190,6 +244,7 @@ async function downloadAll(results) {
 	const downloadAllBtn = document.createElement("button");
 	downloadAllBtn.style.textAlign = "center";
 	downloadAllBtn.style.width = "fit-content";
+	downloadAllBtn.style.color = "white";
 	downloadAllBtn.style.padding = "10px 20px";
 	downloadAllBtn.innerText = "Download All";
 	downloadAllBtn.classList.add("outline");
@@ -293,6 +348,12 @@ async function sendVisualizationRequest() {
 					}
 					deleteForm();
 					let container = document.querySelector(".form-container");
+
+					if (jsonResp.summary) {
+						const summarySection = createSummarySection(jsonResp.summary);
+						container.appendChild(summarySection);
+					}
+
 					jsonResp.results.forEach(result => {
 						const accordion = createChartAccordion(result);
 						container.appendChild(accordion);

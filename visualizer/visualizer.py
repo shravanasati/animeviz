@@ -21,6 +21,7 @@ from .drivers.genre_ratings import GenrewiseRatingsDriver
 from .drivers.monthwise_count import MonthwiseCountDriver
 from .drivers.ratings_curve import RatingsCurveDriver
 from .drivers.remaining_watching import RemainingCountDriver
+from .drivers.status_distribution import StatusDistributionDriver
 
 load_dotenv("./credentials.env")
 
@@ -62,6 +63,7 @@ class Visualizer:
             RatingsCurveDriver(self.df, self.opts),
             RemainingCountDriver(self.df, self.opts),
             FormatDistributionDriver(self.df, self.opts),
+            StatusDistributionDriver(self.df, self.opts),
             FastestFinishedDriver(self.df, self.opts),
         ]
 
@@ -73,6 +75,52 @@ class Visualizer:
     ):
         df = pd.read_xml(xml_data)
         return cls(df, opts)
+
+    def get_summary(self):
+        """
+        Calculates Key Performance Indicators (KPIs) for the user's animelist.
+        """
+        total_anime = int(len(self.df))
+        completed = int(len(self.df[self.df["my_status"] == "Completed"]))
+        total_episodes = int(self.df["my_watched_episodes"].sum())
+
+        # Mean score (excluding unrated)
+        scored_df = self.df[self.df["my_score"] > 0]
+        mean_score = float(scored_df["my_score"].mean()) if not scored_df.empty else 0.0
+
+        # Approximate watch time (assume 24 mins per episode)
+        total_minutes = total_episodes * 24
+        days = total_minutes // (24 * 60)
+
+        # Recent activity (this month)
+        from datetime import date
+
+        current_month = date.today().strftime("%Y-%m")
+        finished_this_month = self.df[
+            self.df["my_finish_date"].str.startswith(current_month)
+        ]
+        count_this_month = int(len(finished_this_month))
+
+        # Favorite genre factor
+        genres_list = []
+        for g in self.df["series_genres"]:
+            genres_list.extend(g)
+
+        most_common_genre = "N/A"
+        if genres_list:
+            from collections import Counter
+
+            most_common_genre = Counter(genres_list).most_common(1)[0][0]
+
+        return {
+            "total_anime": total_anime,
+            "completed": completed,
+            "total_episodes": total_episodes,
+            "mean_score": round(float(mean_score), 2),
+            "days_watched": int(days),
+            "finished_this_month": count_this_month,
+            "favorite_genre": most_common_genre,
+        }
 
     def visualize_all(self):
         results: list[VisualizationResult] = []
