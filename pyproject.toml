@@ -23,10 +23,15 @@ dependencies = [
     "flask-turnstile>=0.1.1,<0.2",
     "gevent>=24.2.1,<25",
     "plotly>=5.22.0,<6",
+    "niquests[http3]>=3.18.8",
+    "animec",
 ]
 
 [tool.uv]
 package = false
+
+[tool.uv.sources]
+animec = { git = "https://github.com/shravanasati/animec.git" }
 
 [build-system]
 requires = ["hatchling"]
