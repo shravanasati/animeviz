@@ -12,7 +12,7 @@ MAX_ID = 65000
 MAX_WORKERS = 10
 OUTPUT_CSV = "anime_data.csv"
 NOT_FOUND_FILE = "anime_404.txt"
-BATCH_SIZE = 50
+BATCH_SIZE = 20
 REQS_PER_SEC = 3
 REQS_PER_MIN = 60
 
@@ -174,11 +174,17 @@ def anime_info(anime_id: int, max_retries: int = 2):
     return anime_id, None, "error"
 
 
-def _load_existing() -> pd.DataFrame:
-    if os.path.exists(OUTPUT_CSV):
+def _load_existing_ids() -> set[int]:
+    if not os.path.exists(OUTPUT_CSV):
+        return set()
+    try:
+        df = pd.read_csv(OUTPUT_CSV, usecols=["id"], encoding="utf-8")
+    except Exception:
         df = pd.read_csv(OUTPUT_CSV, encoding="utf-8")
-        return df.reindex(columns=OUTPUT_COLUMNS)
-    return pd.DataFrame(columns=OUTPUT_COLUMNS)
+        if "id" not in df.columns:
+            return set()
+        df = df[["id"]]
+    return set(int(value) for value in df["id"].dropna())
 
 
 def _load_not_found() -> set[int]:
@@ -235,12 +241,12 @@ def _build_ids(
 def main() -> None:
     args = _parse_args()
     try:
-        df = _load_existing()
+        existing_ids = _load_existing_ids()
     except Exception as exc:
         print(f"Failed to load existing CSV: {exc}")
         return
-    existing_ids = set(int(value) for value in df.get("id", []) if pd.notna(value))
     not_found = _load_not_found()
+    write_header = not os.path.exists(OUTPUT_CSV)
 
     try:
         id_pool = _build_ids(args.start, args.end, args.shard_index, args.shard_count)
@@ -263,6 +269,7 @@ def main() -> None:
     ok_count = 0
     not_found_count = 0
     error_count = 0
+    written = 0
     last_log = time.time()
     start_time = last_log
     log_every = 200
@@ -305,18 +312,35 @@ def main() -> None:
                     last_log = time.time()
 
                 if len(buffer) >= BATCH_SIZE:
-                    df = pd.concat([df, pd.DataFrame(buffer)], ignore_index=True)
-                    df.to_csv(OUTPUT_CSV, index=False, encoding="utf-8")
+                    pd.DataFrame(buffer, columns=OUTPUT_COLUMNS).to_csv(
+                        OUTPUT_CSV,
+                        mode="a",
+                        header=write_header,
+                        index=False,
+                        encoding="utf-8",
+                    )
+                    write_header = False
+                    written += len(buffer)
                     buffer.clear()
                     _save_not_found(not_found)
-                    print(f"Wrote batch. Rows={len(df)} 404s={len(not_found)}")
+                    print(f"Wrote batch. Rows={written} 404s={len(not_found)}")
     except Exception as exc:
         print(f"Main loop error: {exc}")
     finally:
         if buffer:
-            df = pd.concat([df, pd.DataFrame(buffer)], ignore_index=True)
+            try:
+                pd.DataFrame(buffer, columns=OUTPUT_COLUMNS).to_csv(
+                    OUTPUT_CSV,
+                    mode="a",
+                    header=write_header,
+                    index=False,
+                    encoding="utf-8",
+                )
+                write_header = False
+                written += len(buffer)
+            except Exception as exc:
+                print(f"Failed to save output: {exc}")
         try:
-            df.to_csv(OUTPUT_CSV, index=False, encoding="utf-8")
             _save_not_found(not_found)
         except Exception as exc:
             print(f"Failed to save output: {exc}")
