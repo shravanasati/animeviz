@@ -15,7 +15,7 @@ OUTPUT_CSV = "anime_data.csv"
 NOT_FOUND_FILE = "anime_404.txt"
 BATCH_SIZE = 10
 REQS_PER_SEC = 3
-REQS_PER_MIN = 180
+REQS_PER_MIN = 60
 
 OUTPUT_COLUMNS = [
     "id",
@@ -200,7 +200,7 @@ def _normalize_row(anime: Anime, fallback_id: int) -> dict:
 def anime_info(anime_id: int, max_retries: int = 2):
     for attempt in range(max_retries + 1):
         try:
-            _throttle()
+            # _throttle()
             anime = Anime.from_id(anime_id)
             if not anime:
                 return anime_id, None, "not_found"
