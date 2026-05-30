@@ -1,19 +1,18 @@
 import argparse
 import os
 import time
-from datetime import datetime
 from collections import deque
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 
-from animec import Anime
 import pandas as pd
+import niquests
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 MAX_ID = 65000
 MAX_WORKERS = 10
 OUTPUT_CSV = "anime_data.csv"
 NOT_FOUND_FILE = "anime_404.txt"
-BATCH_SIZE = 10
+BATCH_SIZE = 20
 REQS_PER_SEC = 3
 REQS_PER_MIN = 60
 
@@ -79,137 +78,100 @@ def _clean_synopsis(text: str | None) -> str | None:
     return " ".join(str(text).split())
 
 
-def _join_list(values: list[str] | None) -> str | None:
-    if not values:
+def _join_names(items: list[dict] | None, key: str = "name") -> str | None:
+    if not items:
         return None
-    items = [str(value).strip() for value in values if value]
-    return "|".join(items) if items else None
+    names = [item.get(key) for item in items if item.get(key)]
+    return "|".join(names) if names else None
 
 
-def _parse_date(text: str | None) -> str | None:
-    if not text:
+def _format_season(season: str | None, year: int | None) -> str | None:
+    if not season or not year:
         return None
-    value = str(text).strip()
-    if not value or value in {"?", "Unknown"}:
+    return f"{str(season).capitalize()} {year}"
+
+
+def _format_relations(items: list[dict] | None) -> str | None:
+    if not items:
         return None
-    for fmt in ("%b %d, %Y", "%b %Y", "%Y"):
-        try:
-            parsed = datetime.strptime(value, fmt)
-            return parsed.date().isoformat()
-        except ValueError:
-            continue
-    return value
-
-
-def _split_aired(aired: str | None) -> tuple[str | None, str | None]:
-    if not aired:
-        return None, None
-    text = str(aired).strip()
-    if not text:
-        return None, None
-    if " to " in text:
-        start, end = text.split(" to ", 1)
-        return _parse_date(start), _parse_date(end)
-    if "to" in text:
-        start, end = text.split("to", 1)
-        return _parse_date(start), _parse_date(end)
-    return _parse_date(text), None
-
-
-def _parse_int(value) -> int | None:
-    if value is None:
-        return None
-    try:
-        return int(str(value).replace("#", "").replace(",", "").strip())
-    except (TypeError, ValueError):
-        return None
-
-
-def _parse_relation_id(url: str | None) -> int | None:
-    if not url:
-        return None
-    parts = str(url).split("/anime/")
-    if len(parts) < 2:
-        return None
-    tail = parts[1].split("/", 1)[0]
-    return _parse_int(tail)
-
-
-def _clean_relation(text: str | None) -> str | None:
-    if not text:
-        return None
-    value = str(text).strip()
-    if "(" in value and value.endswith(")"):
-        value = value.split("(", 1)[0].strip()
-    return value or None
-
-
-def _format_related(entries: list[dict] | None) -> str | None:
-    if not entries:
-        return None
-    parts: list[str] = []
-    for entry in entries:
-        if not isinstance(entry, dict):
-            continue
-        url = entry.get("url")
-        if not url or "/anime/" not in str(url):
-            continue
-        anime_id = _parse_relation_id(url)
-        title = entry.get("title") or entry.get("name")
-        relation = _clean_relation(entry.get("relation"))
-        if anime_id and title:
-            if relation:
-                parts.append(f"{anime_id}|{title}|{relation}")
-            else:
-                parts.append(f"{anime_id}|{title}")
+    parts = []
+    for relation in items:
+        relation_type = relation.get("relation")
+        for entry in relation.get("entry", []) or []:
+            anime_id = entry.get("mal_id")
+            title = entry.get("name")
+            if anime_id and title:
+                if relation_type:
+                    parts.append(f"{anime_id}|{title}|{relation_type}")
+                else:
+                    parts.append(f"{anime_id}|{title}")
     return " ; ".join(parts) if parts else None
 
 
-def _normalize_row(anime: Anime, fallback_id: int) -> dict:
-    start_date, end_date = _split_aired(getattr(anime, "aired", None))
+def _normalize_row(anime_id: int, data: dict) -> dict:
+    aired = data.get("aired") or {}
     row = {
-        "id": getattr(anime, "id", None) or fallback_id,
-        "title": getattr(anime, "name", None),
-        "alt_title_en": getattr(anime, "title_english", None),
-        "alt_title_jp": getattr(anime, "title_jp", None),
-        "start_date": start_date,
-        "end_date": end_date,
-        "synopsis": _clean_synopsis(getattr(anime, "description", None)),
-        "mean": getattr(anime, "score", None),
-        "rank": _parse_int(getattr(anime, "ranked", None)),
-        "popularity": _parse_int(getattr(anime, "popularity", None)),
-        "num_list_users": getattr(anime, "num_list_users", None),
-        "num_scoring_users": getattr(anime, "num_scoring_users", None),
+        "id": data.get("mal_id", anime_id),
+        "title": data.get("title"),
+        "alt_title_en": data.get("title_english"),
+        "alt_title_jp": data.get("title_japanese"),
+        "start_date": aired.get("from"),
+        "end_date": aired.get("to"),
+        "synopsis": _clean_synopsis(data.get("synopsis")),
+        "mean": data.get("score"),
+        "rank": data.get("rank"),
+        "popularity": data.get("popularity"),
+        "num_list_users": data.get("members"),
+        "num_scoring_users": data.get("scored_by"),
         "nsfw": None,
-        "media_type": getattr(anime, "type", None),
-        "status": getattr(anime, "status", None),
-        "genres": _join_list(getattr(anime, "genres", None)),
-        "explicit_genres": _join_list(getattr(anime, "explicit_genres", None)),
-        "themes": _join_list(getattr(anime, "themes", None)),
-        "demographics": _join_list(getattr(anime, "demographics", None)),
-        "num_episodes": _parse_int(getattr(anime, "episodes", None)),
-        "start_season": getattr(anime, "premiered", None),
-        "average_episode_duration": getattr(anime, "avg_episode_duration", None),
-        "rating": getattr(anime, "rating", None),
-        "related_anime": _format_related(getattr(anime, "related_entries", None)),
-        "studios": _join_list(getattr(anime, "producers", None)),
+        "media_type": data.get("type"),
+        "status": data.get("status"),
+        "genres": _join_names(data.get("genres")),
+        "explicit_genres": _join_names(data.get("explicit_genres")),
+        "themes": _join_names(data.get("themes")),
+        "demographics": _join_names(data.get("demographics")),
+        "num_episodes": data.get("episodes"),
+        "start_season": _format_season(data.get("season"), data.get("year")),
+        "average_episode_duration": data.get("duration"),
+        "rating": data.get("rating"),
+        "related_anime": _format_relations(data.get("relations")),
+        "studios": _join_names(data.get("studios")),
     }
     return row
 
 
 def anime_info(anime_id: int, max_retries: int = 2):
+    url = f"https://api.jikan.moe/v4/anime/{anime_id}/full"
     for attempt in range(max_retries + 1):
         try:
-            # _throttle()
-            anime = Anime.from_id(anime_id)
-            if not anime:
-                return anime_id, None, "not_found"
-            return anime_id, _normalize_row(anime, anime_id), "ok"
+            _throttle()
+            response = niquests.get(url, timeout=15)
         except Exception:
             if attempt == max_retries:
                 return anime_id, None, "error"
             time.sleep(1 + attempt)
             continue
+
+        if response.status_code == 200:
+            try:
+                payload = response.json()
+            except Exception:
+                return anime_id, None, "bad_json"
+            data = payload.get("data") if isinstance(payload, dict) else None
+            if not data:
+                return anime_id, None, "bad_json"
+            return anime_id, _normalize_row(anime_id, data), "ok"
+
+        if response.status_code == 404:
+            return anime_id, None, "not_found"
+
+        if response.status_code in {429, 500, 502, 503, 504} and attempt < max_retries:
+            time.sleep(1 + attempt)
+            continue
+
+        return anime_id, None, f"http_{response.status_code}"
+
+    return anime_id, None, "error"
 
 
 def _load_existing_ids() -> set[int]:
@@ -238,7 +200,7 @@ def _save_not_found(not_found: set[int]) -> None:
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Animec MAL scraper with sharding")
+    parser = argparse.ArgumentParser(description="Jikan anime scraper with sharding")
     parser.add_argument("--start", type=int, default=1, help="Start MAL id")
     parser.add_argument("--end", type=int, default=MAX_ID, help="End MAL id")
     parser.add_argument(
