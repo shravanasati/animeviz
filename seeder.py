@@ -47,7 +47,7 @@ class QdrantSeeder:
     def __init__(self, df: pd.DataFrame) -> None:
         self.df = df
         self.client = self.create_client()
-        self.embedgen = EmbeddingGenerator(parallel=0)
+        self.embedgen = EmbeddingGenerator(parallel=16, batch_size=256)
         self.ensure_collection()
 
     @staticmethod
@@ -98,24 +98,6 @@ class QdrantSeeder:
         return ids
 
     @staticmethod
-    def _row_to_doc(row: dict) -> str:
-        parts = [
-            ("Title", row.get("title", "")),
-            ("Alt title (EN)", row.get("alt_title_en", "")),
-            ("Alt title (JP)", row.get("alt_title_jp", "")),
-            ("Synopsis", row.get("synopsis", "")),
-            ("Genres", row.get("genres", "")),
-            ("Themes", row.get("themes", "")),
-            ("Demographics", row.get("demographics", "")),
-            ("Studios", row.get("studios", "")),
-            ("Type", row.get("media_type", "")),
-            ("Status", row.get("status", "")),
-            ("Rating", row.get("rating", "")),
-        ]
-        lines = [f"{label}: {value}" for label, value in parts if value]
-        return "\n".join(lines)
-
-    @staticmethod
     def _row_to_payload(row: dict) -> dict:
         payload = dict(row)
         payload.pop("synopsis")
@@ -144,8 +126,7 @@ class QdrantSeeder:
         for batch_idx, batch in enumerate(
             self._iter_batches(rows, batch_size), start=1
         ):
-            docs = [self._row_to_doc(row) for row in batch]
-            vectors = self.embedgen.embed(docs)
+            vectors = self.embedgen.embed_rows(batch)
             points = []
             for row, vector in zip(batch, vectors):
                 points.append(
