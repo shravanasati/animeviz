@@ -3,7 +3,7 @@ name = "animeviz"
 version = "0.1.0"
 description = "A website to make beautiful and insightful graphs on your anime lists."
 authors = [{ name = "Shravan Asati", email = "dev.shravan@protonmail.com" }]
-requires-python = ">=3.11,<4"
+requires-python = ">=3.13,<4"
 readme = "README.md"
 license = "MIT"
 dependencies = [
@@ -14,7 +14,7 @@ dependencies = [
     "flask-login>=0.6.3,<0.7",
     "requests>=2.31.0,<3",
     "pandas>=2.2.0,<3",
-    "numpy>=1.26.4,<2",
+    "numpy>=2.4.6",
     "matplotlib>=3.8.2,<4",
     "lxml>=5.1.0,<6",
     "pendulum>=3.0.0,<4",
@@ -25,6 +25,8 @@ dependencies = [
     "plotly>=5.22.0,<6",
     "niquests[http3]>=3.18.8",
     "animec",
+    "fastembed>=0.4.2",
+    "qdrant-client>=1.18.0",
 ]
 
 [tool.uv]
