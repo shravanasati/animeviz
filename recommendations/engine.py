@@ -1,4 +1,7 @@
 from dataclasses import dataclass
+from datetime import date
+from pprint import pprint
+from typing import NamedTuple
 
 import numpy as np
 
@@ -8,8 +11,89 @@ from recommendations.embed import EmbeddingGenerator
 from recommendations.qdrant_store import QdrantStore
 
 
+CANDIDATE_SET_SIZE = 200
+NUM_RECOMMENDATIONS = 10
+
+
+class AnimeRelation(NamedTuple):
+    id: int
+    title: str
+    relation: str
+
+
+@dataclass(frozen=True, slots=True)
+class AnimePayload:
+    id: int
+    title: str
+    alt_title_en: str
+    alt_title_jp: str
+    start_date: date | None
+    end_date: date | None
+    mean: float
+    rank: int
+    popularity: int
+    num_list_users: int
+    num_scoring_users: int
+    media_type: str
+    status: str
+    genres: list[str]
+    themes: list[str]
+    demographics: list[str]
+    num_episodes: int
+    average_episode_duration: str
+    rating: str
+    related_anime: list[AnimeRelation]
+    studios: list[str]
+
+    @staticmethod
+    def _parse_date(date_str: str):
+        if not date_str:
+            return None
+        return date.fromisoformat(date_str.split("T")[0])
+
+    @staticmethod
+    def _parse_list(list_str: str, delim: str = "|"):
+        return [i.strip() for i in list_str.split(delim) if i.strip()]
+
+    @staticmethod
+    def _parse_relations(relations_list: list[str]):
+        relations: list[AnimeRelation] = []
+        for item in relations_list:
+            id_, title, relation = item.split("|")
+            relations.append(AnimeRelation(int(id_), title, relation))
+
+        return relations
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        return AnimePayload(
+            id=d["id"],
+            title=d["title"],
+            alt_title_en=d["alt_title_en"],
+            alt_title_jp=d["alt_title_jp"],
+            start_date=cls._parse_date(d["start_date"]),
+            end_date=cls._parse_date(d["end_date"]),
+            mean=d["mean"],
+            rank=int(d["rank"]),
+            popularity=int(d["popularity"]),
+            num_list_users=int(d["num_list_users"]),
+            num_scoring_users=int(d["num_scoring_users"]),
+            media_type=d["media_type"],
+            status=d["status"],
+            genres=cls._parse_list(d["genres"]),
+            themes=cls._parse_list(d["themes"]),
+            demographics=cls._parse_list(d["demographics"]),
+            studios=cls._parse_list(d["studios"]),
+            num_episodes=int(d["num_episodes"]),
+            rating=d["rating"],
+            average_episode_duration=d["average_episode_duration"],
+            related_anime=cls._parse_relations(cls._parse_list(d["related_anime"], ";")),
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class AnimeRecommendation:
+    # todo maybe add english titles as well
     mal_id: int
     title: str
 
@@ -26,24 +110,52 @@ class RecommendationEngine:
 
         userlist_embeddings = np.array(self.embedgen.embed_anime_rows(userlist_df_rows))
         avg_vector = self._average_vector(userlist_embeddings)
-        print(
-            [
-                r.payload["alt_title_en"]
-                for r in self.qdrant_store.similarity_search(avg_vector).points
-            ]
-        )
+        return [
+            AnimePayload.from_dict(r.payload)
+            for r in self.qdrant_store.similarity_search(
+                avg_vector, CANDIDATE_SET_SIZE
+            ).points
+        ]
 
     @staticmethod
     def _average_vector(userlist_embeddings: np.ndarray):
+        # todo implement weighted average
         avg_vector = (np.sum(userlist_embeddings, axis=0)) / len(userlist_embeddings)
         return avg_vector
 
-    def recommend(self, userlist: list[int]) -> list[AnimeRecommendation]:
+    def _rank(
+        self, userlist: list[int], candidate_set: list[AnimePayload]
+    ) -> list[AnimeRecommendation]:
+        userlist_set = set(userlist)
+        scored_set: list[tuple[float, AnimePayload]] = []
+        for candidate in candidate_set:
+            # todo implement this in the vector search
+            if candidate.id in userlist_set:
+                continue
+
+            score = self._calculate_score(candidate)
+            scored_set.append((score, candidate))
+
+        return [
+            AnimeRecommendation(mal_id=i[1].id, title=i[1].title)
+            for i in sorted(scored_set, reverse=True, key=lambda x: x[0])
+        ]
+
+    @staticmethod
+    def _calculate_score(candidate: AnimePayload):
+        score = 0
+        score += (candidate.mean / 10) ** 2
+        # todo implement more heuristics
+        # score += (candidate.)
+        return score
+
+    def recommendations(self, userlist: list[int]) -> list[AnimeRecommendation]:
         candidate_set = self._retrieve(userlist)
-        final = self._rank(candidate_set)
+        ranked = self._rank(userlist, candidate_set)
+        return ranked[:NUM_RECOMMENDATIONS]
 
 
 if __name__ == "__main__":
     receng = RecommendationEngine()
     # frieren, mt, eminence, dungeon
-    receng._retrieve([52991, 39535, 48316, 52701])
+    pprint(receng.recommendations([52991, 39535, 48316, 52701]))

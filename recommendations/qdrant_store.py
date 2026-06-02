@@ -80,6 +80,7 @@ class QdrantStore:
         )
 
     def similarity_search(self, vector, limit=10):
+        # todo add a filter against userlist
         return self.client.query_points(
             QDRANT_COLLECTION, query=vector, with_payload=True, limit=limit
         )
