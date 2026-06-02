@@ -12,11 +12,11 @@ class EmbeddingGenerator:
             self.model.embed(docs, batch_size=self.batch_size, parallel=self.parallel)
         )
 
-    def embed_rows(self, rows: list[dict]):
+    def embed_anime_rows(self, rows: list[dict]):
         return self.embed_docs([self._row_to_doc(r) for r in rows])
 
-    def embed_row(self, row: dict):
-        return self.embed_rows([row])
+    def embed_anime_row(self, row: dict):
+        return self.embed_anime_rows([row])
 
     @staticmethod
     def _row_to_doc(row: dict) -> str:
@@ -35,7 +35,6 @@ class EmbeddingGenerator:
         ]
         lines = [f"{label}: {value}" for label, value in parts if value]
         return "\n".join(lines)
-
 
 
 if __name__ == "__main__":
