@@ -79,8 +79,22 @@ class QdrantStore:
             QDRANT_COLLECTION, points=points, wait=False, parallel=4
         )
 
-    def similarity_search(self, vector, limit=10):
-        # todo add a filter against userlist
+    def search_similar_anime(
+        self, vector: list[float], userlist_ids: list[int], limit: int = 10
+    ):
+        """
+        Searches the QDrant collection against the passed average `vector`.
+        Returns `limit` results.
+        The `userlist_ids` are filtered.
+        """
         return self.client.query_points(
-            QDRANT_COLLECTION, query=vector, with_payload=True, limit=limit
+            QDRANT_COLLECTION,
+            query=vector,
+            with_payload=True,
+            limit=limit,
+            query_filter=models.Filter(
+                must_not=models.FieldCondition(
+                    key="id", match=models.MatchAny(any=userlist_ids)
+                )
+            ),
         )

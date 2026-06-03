@@ -12,7 +12,7 @@ from recommendations.qdrant_store import QdrantStore
 
 
 CANDIDATE_SET_SIZE = 200
-NUM_RECOMMENDATIONS = 10
+NUM_RECOMMENDATIONS = 20
 
 
 class AnimeRelation(NamedTuple):
@@ -87,15 +87,17 @@ class AnimePayload:
             num_episodes=int(d["num_episodes"]),
             rating=d["rating"],
             average_episode_duration=d["average_episode_duration"],
-            related_anime=cls._parse_relations(cls._parse_list(d["related_anime"], ";")),
+            related_anime=cls._parse_relations(
+                cls._parse_list(d["related_anime"], ";")
+            ),
         )
 
 
 @dataclass(frozen=True, slots=True)
 class AnimeRecommendation:
-    # todo maybe add english titles as well
     mal_id: int
     title: str
+    title_en: str
 
 
 class RecommendationEngine:
@@ -112,8 +114,8 @@ class RecommendationEngine:
         avg_vector = self._average_vector(userlist_embeddings)
         return [
             AnimePayload.from_dict(r.payload)
-            for r in self.qdrant_store.similarity_search(
-                avg_vector, CANDIDATE_SET_SIZE
+            for r in self.qdrant_store.search_similar_anime(
+                avg_vector, userlist_ids, CANDIDATE_SET_SIZE
             ).points
         ]
 
@@ -126,18 +128,15 @@ class RecommendationEngine:
     def _rank(
         self, userlist: list[int], candidate_set: list[AnimePayload]
     ) -> list[AnimeRecommendation]:
-        userlist_set = set(userlist)
         scored_set: list[tuple[float, AnimePayload]] = []
         for candidate in candidate_set:
-            # todo implement this in the vector search
-            if candidate.id in userlist_set:
-                continue
-
             score = self._calculate_score(candidate)
             scored_set.append((score, candidate))
 
         return [
-            AnimeRecommendation(mal_id=i[1].id, title=i[1].title)
+            AnimeRecommendation(
+                mal_id=i[1].id, title=i[1].title, title_en=i[1].alt_title_en
+            )
             for i in sorted(scored_set, reverse=True, key=lambda x: x[0])
         ]
 
