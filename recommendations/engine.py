@@ -59,7 +59,10 @@ class AnimePayload:
     def _parse_relations(relations_list: list[str]):
         relations: list[AnimeRelation] = []
         for item in relations_list:
-            id_, title, relation = item.split("|")
+            splitted = item.split("|")
+            if len(splitted) != 3:
+                continue
+            id_, title, relation = splitted
             relations.append(AnimeRelation(int(id_), title, relation))
 
         return relations
@@ -110,8 +113,14 @@ class RecommendationEngine:
         userlist_df = self.anime_store.df[self.anime_store.df["id"].isin(userlist_ids)]
         userlist_df_rows = userlist_df.to_dict(orient="records")
 
-        userlist_embeddings = np.array(self.embedgen.embed_anime_rows(userlist_df_rows))
+        if userlist_df_rows:
+            userlist_embeddings = np.array(self.embedgen.embed_anime_rows(userlist_df_rows))
+        else:
+            embedding_size = self.embedgen.model.embedding_size
+            userlist_embeddings = np.random.random((10, embedding_size))
+
         avg_vector = self._average_vector(userlist_embeddings)
+
         return [
             AnimePayload.from_dict(r.payload)
             for r in self.qdrant_store.search_similar_anime(
@@ -129,6 +138,7 @@ class RecommendationEngine:
         self, userlist: list[int], candidate_set: list[AnimePayload]
     ) -> list[AnimeRecommendation]:
         scored_set: list[tuple[float, AnimePayload]] = []
+        # todo handle userlist
         for candidate in candidate_set:
             score = self._calculate_score(candidate)
             scored_set.append((score, candidate))
@@ -149,6 +159,7 @@ class RecommendationEngine:
         return score
 
     def recommendations(self, userlist: list[int]) -> list[AnimeRecommendation]:
+        # todo userlist is a dataframe instead of just list of IDs
         candidate_set = self._retrieve(userlist)
         ranked = self._rank(userlist, candidate_set)
         return ranked[:NUM_RECOMMENDATIONS]
@@ -157,4 +168,5 @@ class RecommendationEngine:
 if __name__ == "__main__":
     receng = RecommendationEngine()
     # frieren, mt, eminence, dungeon
-    pprint(receng.recommendations([52991, 39535, 48316, 52701]))
+    # pprint(receng.recommendations([52991, 39535, 48316, 52701]))
+    pprint(receng.recommendations([]))
