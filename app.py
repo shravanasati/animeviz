@@ -20,7 +20,7 @@ from flask_turnstile import Turnstile
 
 from database import DB_CONNECTION_URI, db_session, init_db
 from models import User
-from recommendations.engine import RecommendationEngine
+from recommendations.engine import RecommendationEngine, RecommendationOpts
 from visualizer.api_helper import build_df_from_mal_api_data
 from visualizer.visualizer import VisualizationOptions, Visualizer
 
@@ -413,19 +413,26 @@ def visualize():
 
 
 @app.post("/recommendations")
-@limiter.limit("60/minute;3/second")
+@limiter.limit("2/minute")
 def recommend():
     # if not turnstile.verify():
     #     # print("cpatcha verification failed")
     #     abort(401, "captcha")
+    print("hello recommendations")
 
     animelist_file = request.files.get("file")
+    disable_nsfw = True
+    disable_nsfw_arg = request.args.get("disable_nsfw")
+    if disable_nsfw_arg and disable_nsfw_arg == "false":
+        disable_nsfw = False
+
+    opts = RecommendationOpts(disable_nsfw, "weighted", "all")
 
     if animelist_file:
         try:
             xml_buf = process_uploaded_xml(animelist_file.stream)
             userlist_df = pd.read_xml(xml_buf)
-            recs = recommendation_engine.recommendations(userlist_df)
+            recs = recommendation_engine.recommendations(userlist_df, opts)
             return {
                 "success": True,
                 "message": "Recommendations generated successfully.",
@@ -454,13 +461,12 @@ def recommend():
         try:
             data = fetch_mal_data(current_user)
             userlist_df = build_df_from_mal_api_data(data)
-            recs = recommendation_engine.recommendations(userlist_df)
+            recs = recommendation_engine.recommendations(userlist_df, opts)
             return {
                 "success": True,
                 "message": "Recommendations generated successfully.",
                 "results": [rec.to_dict() for rec in recs],
             }
-
 
         except Exception as e:
             logger.error("cant get user animelist")

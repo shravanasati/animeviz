@@ -2,7 +2,7 @@ from collections import Counter
 from dataclasses import dataclass, asdict
 from datetime import date
 import math
-from typing import NamedTuple
+from typing import Literal, NamedTuple
 
 import numpy as np
 import pandas as pd
@@ -15,6 +15,7 @@ from recommendations.qdrant_store import QdrantStore
 
 CANDIDATE_SET_SIZE = 200
 NUM_RECOMMENDATIONS = 20
+NSFW_GENRES = ("Hentai",)
 
 
 class AnimeRelation(NamedTuple):
@@ -108,14 +109,20 @@ class AnimeRecommendation:
         return asdict(self)
 
 
+@dataclass(frozen=True, slots=True)
+class RecommendationOpts:
+    disable_nsfw: bool
+    average_algo: Literal["weighted"] | Literal["unweighted"] = "weighted"
+    ranking_features: Literal["all"] | Literal["score"] = "all"
+
+
 class RecommendationEngine:
     def __init__(self) -> None:
         self.embedgen = EmbeddingGenerator()
         self.qdrant_store = QdrantStore()
         self.anime_store = AnimeStore()
-        # todo nsfw
 
-    def _retrieve(self, userlist: pd.DataFrame):
+    def _retrieve(self, userlist: pd.DataFrame, opts: RecommendationOpts):
         # the fields are in parity with those defined in api_helper.py
         userlist_ids = (userlist["series_animedb_id"]).to_list()
 
@@ -130,17 +137,31 @@ class RecommendationEngine:
             embedding_size = self.embedgen.model.embedding_size
             userlist_embeddings = np.random.random((10, embedding_size))
 
-        avg_vector = self._average_vector(userlist_embeddings, userlist)
+        avg_func = (
+            self._average_vector_weighted
+            if opts.average_algo == "weighted"
+            else self._average_vector_unweighted
+        )
+
+        avg_vector = avg_func(userlist_embeddings, userlist)
 
         return [
             (AnimePayload.from_dict(r.payload), r.score)
             for r in self.qdrant_store.search_similar_anime(
-                avg_vector.tolist(), userlist_ids, CANDIDATE_SET_SIZE
+                avg_vector.tolist(), userlist_ids, CANDIDATE_SET_SIZE, opts.disable_nsfw
             ).points
         ]
 
     @staticmethod
-    def _average_vector(userlist_embeddings: np.ndarray, userlist: pd.DataFrame):
+    def _average_vector_unweighted(
+        userlist_embeddings: np.ndarray, userlist: pd.DataFrame
+    ):
+        return np.average(userlist_embeddings, axis=0)
+
+    @staticmethod
+    def _average_vector_weighted(
+        userlist_embeddings: np.ndarray, userlist: pd.DataFrame
+    ):
         status_weights = {
             "Completed": 1.0,
             "Watching": 0.85,
@@ -177,6 +198,19 @@ class RecommendationEngine:
 
         avg_vector = np.average(userlist_embeddings, weights=weights, axis=0)
         return avg_vector
+
+    def _rank_naive(self, candidate_set: list[tuple[AnimePayload, float]]):
+        scored_set: list[tuple[float, AnimePayload]] = []
+        for candidate, _ in candidate_set:
+            score = (candidate.mean / 10) ** 2
+            scored_set.append((score, candidate))
+
+        return [
+            AnimeRecommendation(
+                mal_id=i[1].id, title=i[1].title, title_en=i[1].alt_title_en
+            )
+            for i in sorted(scored_set, reverse=True, key=lambda x: x[0])
+        ]
 
     def _rank(
         self, userlist: pd.DataFrame, candidate_set: list[tuple[AnimePayload, float]]
@@ -335,10 +369,15 @@ class RecommendationEngine:
 
         return df
 
-    def recommendations(self, userlist: pd.DataFrame) -> list[AnimeRecommendation]:
+    def recommendations(
+        self, userlist: pd.DataFrame, opts: RecommendationOpts
+    ) -> list[AnimeRecommendation]:
         userlist = self._prepare_userlist_df(userlist)
-        candidate_set = self._retrieve(userlist)
-        ranked = self._rank(userlist, candidate_set)
+        candidate_set = self._retrieve(userlist, opts)
+        if opts.ranking_features == "all":
+            ranked = self._rank(userlist, candidate_set )
+        else:
+            ranked = self._rank_naive(candidate_set)
         return ranked[:NUM_RECOMMENDATIONS]
 
 

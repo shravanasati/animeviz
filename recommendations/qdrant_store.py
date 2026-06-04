@@ -80,21 +80,28 @@ class QdrantStore:
         )
 
     def search_similar_anime(
-        self, vector: list[float], userlist_ids: list[int], limit: int = 10
+        self,
+        vector: list[float],
+        userlist_ids: list[int],
+        limit: int,
+        disable_nsfw: bool,
     ):
         """
         Searches the QDrant collection against the passed average `vector`.
         Returns `limit` results.
         The `userlist_ids` are filtered.
         """
+        must_not_conditions = [
+            models.FieldCondition(key="id", match=models.MatchAny(any=userlist_ids))
+        ]
+
+        if disable_nsfw:
+            must_not_conditions.append(models.FieldCondition(key="genres", match=models.MatchPhrase(phrase="Hentai")))
+
         return self.client.query_points(
             QDRANT_COLLECTION,
             query=vector,
             with_payload=True,
             limit=limit,
-            query_filter=models.Filter(
-                must_not=models.FieldCondition(
-                    key="id", match=models.MatchAny(any=userlist_ids)
-                )
-            ),
+            query_filter=models.Filter(must_not=must_not_conditions),
         )
