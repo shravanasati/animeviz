@@ -23,15 +23,17 @@
 	{% if current_user and current_user.is_authenticated %}
 	<h1 class="hero-text" style="margin-top: 3rem;">Welcome <u>{{current_user.name}}</u></h1>
 	<br><br>
-	<a href="/visualize" role="button" class="btn">Visualize your data</a>
+	<div style="display: flex; flex-direction: column; gap: 15px;">
+		<a href="/visualize" role="button" class="btn">Visualize your data</a>
+		<a href="/recommendations" role="button" class="btn">Get recommendations</a>
+	</div>
 	{% else %}
 
-	<h1 class="hero-text">Visualise your MyAnimeList data <br> <span style="font-style: italic;">effortlessly!</span></h1>
-	<!-- <p style="color: rgb(132, 17, 82);"><mark>Your anime lists finally have a purpose.</mark></p> -->
+	<h1 class="hero-text">Visualise &amp; get recommendations <br>from your MyAnimeList data <br> <span style="font-style: italic;">effortlessly!</span></h1>
 	<h4 class="subtitle">Get Started by</h4>
-	<a href="/login/myanimelist" role="button" class="btn">Logging in</a>
+	<a href="/login/myanimelist" role="button" class="btn">Login with MAL</a>
 	<p style="margin: 0.35rem; color: aliceblue;">OR</p>
-	<a href="/visualize" role="button" class="btn">Upload the exported animelist.xml</a>
+	<a href="/visualize" role="button" class="btn">Upload exported animelist.xml</a>
 	{% endif %}
 
 </div>

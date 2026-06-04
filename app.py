@@ -412,13 +412,17 @@ def visualize():
             gc.collect()
 
 
+@app.get("/recommendations")
+def recommendations_page():
+    return render_template("recommendations.html")
+
+
 @app.post("/recommendations")
 @limiter.limit("2/minute")
 def recommend():
-    # if not turnstile.verify():
-    #     # print("cpatcha verification failed")
-    #     abort(401, "captcha")
-    print("hello recommendations")
+    if not turnstile.verify():
+        # print("cpatcha verification failed")
+        abort(401, "captcha")
 
     animelist_file = request.files.get("file")
     disable_nsfw = True
