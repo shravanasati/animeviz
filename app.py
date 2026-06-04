@@ -9,6 +9,7 @@ from datetime import timedelta
 from io import BytesIO
 from urllib.parse import urlencode
 
+import pandas as pd
 import requests
 from dotenv import load_dotenv
 from flask import Flask, abort, redirect, render_template, request, session, url_for
@@ -19,6 +20,7 @@ from flask_turnstile import Turnstile
 
 from database import DB_CONNECTION_URI, db_session, init_db
 from models import User
+from recommendations.engine import RecommendationEngine
 from visualizer.api_helper import build_df_from_mal_api_data
 from visualizer.visualizer import VisualizationOptions, Visualizer
 
@@ -51,7 +53,6 @@ if int(os.environ["PROD"]):
 # flask login settings
 app.config["REMEMBER_COOKIE_DURATION"] = timedelta(days=30)
 app.config["REMEMBER_COOKIE_REFRESH_EACH_REQUEST"] = False
-# // todo add logging config
 
 
 # def get_logging_filepath():
@@ -63,7 +64,12 @@ app.config["REMEMBER_COOKIE_REFRESH_EACH_REQUEST"] = False
 #     return today_log_file
 
 
-# logging.basicConfig()
+logging.basicConfig(
+    level=logging.WARNING, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -82,6 +88,8 @@ turnstile = Turnstile(
     site_key=os.environ["TURNSTILE_SITE_KEY"],
     secret_key=os.environ["TURNSTILE_SECRET_KEY"],
 )
+
+recommendation_engine = RecommendationEngine()
 
 
 @login_manager.user_loader
@@ -149,24 +157,24 @@ def callback(provider: str):
 
     provider_data = app.config["OAUTH2_PROVIDERS"].get(provider)
     if not provider_data:
-        logging.debug("missing provider data")
+        logger.debug("missing provider data")
         abort(404)
 
     if "error" in request.args:
-        logging.error("error in request.args")
-        logging.error(request.args)
+        logger.error("error in request.args")
+        logger.error(request.args)
         abort(401, provider)
 
     # make sure that the state parameter matches the one we created in the
     # authorization request
     if request.args["state"] != session.get("oauth2_state"):
-        logging.warning("states dont match")
+        logger.warning("states dont match")
         abort(401, provider)
 
     # make sure that the authorization code is present
     if "code" not in request.args:
-        logging.warning("code not presesnt in request.args")
-        logging.warning(request.args)
+        logger.warning("code not presesnt in request.args")
+        logger.warning(request.args)
         abort(401, provider)
 
     resp = requests.post(
@@ -182,14 +190,14 @@ def callback(provider: str):
     )
 
     if resp.status_code != 200:
-        logging.warning("token request failed")
+        logger.warning("token request failed")
         abort(401, provider)
 
     resp_json = resp.json()
     oauth2_token = resp_json.get("access_token")
     refresh_token = resp_json.get("refresh_token")
     if not oauth2_token or not refresh_token:
-        logging.warning("tokens not present in token response")
+        logger.warning("tokens not present in token response")
         abort(401, provider)
 
     # use the access token to get the username
@@ -201,7 +209,7 @@ def callback(provider: str):
         },
     )
     if response.status_code != 200:
-        logging.warning("unable to get user info")
+        logger.warning("unable to get user info")
         abort(401, provider)
 
     # find or create the user in the database
@@ -222,7 +230,7 @@ def callback(provider: str):
 def issue_new_token(user: User):
     provider_data = app.config["OAUTH2_PROVIDERS"][user.login_provider]
     if not provider_data:
-        logging.debug("unable to get provider data in issue_new_token")
+        logger.debug("unable to get provider data in issue_new_token")
         return False
 
     resp = requests.post(
@@ -237,7 +245,7 @@ def issue_new_token(user: User):
     )
 
     if resp.status_code != 200:
-        logging.warning("issuing new access token using refresh token failed")
+        logger.warning("issuing new access token using refresh token failed")
         return False
 
     resp_json = resp.json()
@@ -245,12 +253,59 @@ def issue_new_token(user: User):
     refresh_token = resp_json.get("refresh_token")
 
     if not oauth2_token or not refresh_token:
-        logging.warning("tokens not present in token response")
+        logger.warning("tokens not present in token response")
         return False
 
     user.refresh_token = refresh_token
     user.oauth2_token = oauth2_token
     db_session.commit()
+
+
+def process_uploaded_xml(source):
+    tree = ET.parse(source)
+    root = tree.getroot()
+    if root is None or len(root) == 0:
+        raise ET.ParseError("unable to get xml root")
+    userinfo = root.find("myinfo")
+    if userinfo is not None:
+        root.remove(userinfo)
+
+    xml_buf = BytesIO()
+    tree.write(xml_buf)
+    xml_buf.seek(0)
+    return xml_buf
+
+
+def fetch_mal_data(current_user):
+    oauth2_token = current_user.oauth2_token
+    login_provider = current_user.login_provider
+    provider_data = app.config["OAUTH2_PROVIDERS"][login_provider]
+    animelist_url = provider_data["animelist_url"]
+
+    paging_available = True
+    data = []
+    while paging_available:
+        resp = requests.get(
+            animelist_url, headers={"Authorization": "Bearer " + oauth2_token}
+        )
+        if resp.status_code == 401:
+            if issue_new_token(current_user):
+                continue
+            else:
+                return {
+                    "success": False,
+                    "message": "Unable to authorize the user! Please logout and login once.",
+                    "results": [],
+                }
+
+        resp.raise_for_status()
+        resp_json = resp.json()
+        data += resp_json["data"]
+        paging_available = resp_json["paging"].get("next")
+        if paging_available:
+            animelist_url = resp_json["paging"]["next"]
+
+    return data
 
 
 @app.route("/logout")
@@ -293,18 +348,7 @@ def visualize():
             # todo add a queued column in the database for every user
             # for non-logged in users, hash the animelist file
 
-            tree = ET.parse(animelist_file.stream)
-            root = tree.getroot()
-            if not root:
-                raise ET.ParseError("unable to get xml root")
-            userinfo = root.find("myinfo")
-            if userinfo is not None:
-                root.remove(userinfo)
-
-            xml_buf = BytesIO()
-            tree.write(xml_buf)
-            xml_buf.seek(0)
-
+            xml_buf = process_uploaded_xml(animelist_file.stream)
             viz = Visualizer.from_xml(xml_buf, opts)
             results = viz.visualize_all()
             summary = viz.get_summary()
@@ -325,7 +369,7 @@ def visualize():
             }
 
         except Exception as e:
-            logging.exception(e)
+            logger.exception(e)
             return {
                 "success": False,
                 "message": "An unknown error occured. Please try again later.",
@@ -340,34 +384,7 @@ def visualize():
             abort(401, "myanimelist")
 
         try:
-            oauth2_token = current_user.oauth2_token
-            login_provider = current_user.login_provider
-            provider_data = app.config["OAUTH2_PROVIDERS"][login_provider]
-            animelist_url = provider_data["animelist_url"]
-
-            paging_available = True
-            data = []
-            while paging_available:
-                resp = requests.get(
-                    animelist_url, headers={"Authorization": "Bearer " + oauth2_token}
-                )
-                if resp.status_code == 401:
-                    if issue_new_token(current_user):
-                        continue
-                    else:
-                        return {
-                            "success": False,
-                            "message": "Unable to authorize the user! Please logout and login once.",
-                            "results": [],
-                        }
-
-                resp.raise_for_status()
-                resp_json = resp.json()
-                data += resp_json["data"]
-                paging_available = resp_json["paging"].get("next")
-                if paging_available:
-                    animelist_url = resp_json["paging"]["next"]
-
+            data = fetch_mal_data(current_user)
             df = build_df_from_mal_api_data(data)
             viz = Visualizer(df, opts)
             results = viz.visualize_all()
@@ -382,8 +399,8 @@ def visualize():
             }
 
         except Exception as e:
-            logging.error("cant get user animelist")
-            logging.exception(e)
+            logger.error("cant get user animelist")
+            logger.exception(e)
             return {
                 "success": False,
                 "message": "An unknown error occured. Please try again later.",
@@ -393,3 +410,63 @@ def visualize():
         finally:
             # todo fix memory leaks
             gc.collect()
+
+
+@app.post("/recommendations")
+@limiter.limit("60/minute;3/second")
+def recommend():
+    # if not turnstile.verify():
+    #     # print("cpatcha verification failed")
+    #     abort(401, "captcha")
+
+    animelist_file = request.files.get("file")
+
+    if animelist_file:
+        try:
+            xml_buf = process_uploaded_xml(animelist_file.stream)
+            userlist_df = pd.read_xml(xml_buf)
+            recs = recommendation_engine.recommendations(userlist_df)
+            return {
+                "success": True,
+                "message": "Recommendations generated successfully.",
+                "results": [rec.to_dict() for rec in recs],
+            }
+
+        except ET.ParseError:
+            return {
+                "success": False,
+                "message": "Unable to parse the animelist.xml file",
+                "results": [],
+            }
+
+        except Exception as e:
+            logger.exception(e)
+            return {
+                "success": False,
+                "message": "An unknown error occured. Please try again later.",
+                "results": [],
+            }
+
+    else:
+        if not current_user.is_authenticated:
+            abort(401, "myanimelist")
+
+        try:
+            data = fetch_mal_data(current_user)
+            userlist_df = build_df_from_mal_api_data(data)
+            recs = recommendation_engine.recommendations(userlist_df)
+            return {
+                "success": True,
+                "message": "Recommendations generated successfully.",
+                "results": [rec.to_dict() for rec in recs],
+            }
+
+
+        except Exception as e:
+            logger.error("cant get user animelist")
+            logger.exception(e)
+            return {
+                "success": False,
+                "message": "An unknown error occured. Please try again later.",
+                "results": [],
+            }
