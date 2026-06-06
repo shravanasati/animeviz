@@ -11,6 +11,7 @@ QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
 QDRANT_URL = f"http://{QDRANT_HOST}:{QDRANT_PORT}"
 QDRANT_COLLECTION = "anime"
+NSFW_GENRES = ("Hentai",)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -96,7 +97,8 @@ class QdrantStore:
         ]
 
         if disable_nsfw:
-            must_not_conditions.append(models.FieldCondition(key="genres", match=models.MatchPhrase(phrase="Hentai")))
+            for ng in NSFW_GENRES:
+                must_not_conditions.append(models.FieldCondition(key="genres", match=models.MatchPhrase(phrase=ng)))
 
         return self.client.query_points(
             QDRANT_COLLECTION,

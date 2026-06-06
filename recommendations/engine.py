@@ -15,7 +15,6 @@ from recommendations.qdrant_store import QdrantStore
 
 CANDIDATE_SET_SIZE = 200
 NUM_RECOMMENDATIONS = 20
-NSFW_GENRES = ("Hentai",)
 
 
 class AnimeRelation(NamedTuple):
