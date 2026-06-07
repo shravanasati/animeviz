@@ -189,9 +189,9 @@ class RecommendationEngine:
 
         weights = (
             userlist["score_weight"]
-            + userlist["progress_weight"]
-            + userlist["recency_weight"]
-            + userlist["status_weight"]
+            * userlist["progress_weight"]
+            * userlist["recency_weight"]
+            * userlist["status_weight"]
         ).to_numpy()
         weights /= weights.sum()
 
@@ -214,6 +214,8 @@ class RecommendationEngine:
     def _rank(
         self, userlist: pd.DataFrame, candidate_set: list[tuple[AnimePayload, float]]
     ) -> list[AnimeRecommendation]:
+        ENABLE_GENRE_DIVERSITY = False
+
         # feature weights
         WEIGHT_SIM = 1.0
         WEIGHT_QUALITY = 0.7
@@ -290,40 +292,45 @@ class RecommendationEngine:
 
             f["base_score"] = base_score
 
-        # diversity-aware greedy selection with genre-penalty
-        genre_counts = Counter()
-        selected: list[dict] = []
-        remaining = feats.copy()
-
         # cap selection to NUM_RECOMMENDATIONS or available candidates
-        select_k = min(NUM_RECOMMENDATIONS, len(remaining))
+        select_k = min(NUM_RECOMMENDATIONS, len(feats))
 
-        for _ in range(select_k):
-            # compute adjusted scores with genre penalty
-            best_idx = None
-            best_score = -math.inf
-            for idx, f in enumerate(remaining):
-                multiplier = 1.0
-                # if any genre already overrepresented, apply penalty
-                for g in f["candidate"].genres:
-                    if genre_counts[g] >= 4:
-                        multiplier = 0.8
-                        break
+        if ENABLE_GENRE_DIVERSITY:
+            # diversity-aware greedy selection with genre-penalty
+            genre_counts = Counter()
+            selected: list[dict] = []
+            remaining = feats.copy()
 
-                adjusted = f["base_score"] * multiplier
-                if adjusted > best_score:
-                    best_score = adjusted
-                    best_idx = idx
+            for _ in range(select_k):
+                # compute adjusted scores with genre penalty
+                best_idx = None
+                best_score = -math.inf
+                for idx, f in enumerate(remaining):
+                    multiplier = 1.0
+                    # if any genre already overrepresented, apply penalty
+                    for g in f["candidate"].genres:
+                        if genre_counts[g] >= 4:
+                            multiplier = 0.8
+                            break
 
-            if best_idx is None:
-                break
+                    adjusted = f["base_score"] * multiplier
+                    if adjusted > best_score:
+                        best_score = adjusted
+                        best_idx = idx
 
-            pick = remaining.pop(best_idx)
-            # update genre counts
-            for g in pick["candidate"].genres:
-                genre_counts[g] += 1
+                if best_idx is None:
+                    break
 
-            selected.append(pick)
+                pick = remaining.pop(best_idx)
+                # update genre counts
+                for g in pick["candidate"].genres:
+                    genre_counts[g] += 1
+
+                selected.append(pick)
+        else:
+            selected = sorted(feats, key=lambda f: f["base_score"], reverse=True)[
+                :select_k
+            ]
 
         # return ordered AnimeRecommendation list
         return [
@@ -374,7 +381,7 @@ class RecommendationEngine:
         userlist = self._prepare_userlist_df(userlist)
         candidate_set = self._retrieve(userlist, opts)
         if opts.ranking_features == "all":
-            ranked = self._rank(userlist, candidate_set )
+            ranked = self._rank(userlist, candidate_set)
         else:
             ranked = self._rank_naive(candidate_set)
         return ranked[:NUM_RECOMMENDATIONS]
