@@ -139,3 +139,5 @@ cython_debug/
 
 # Vim
 *~
+
+qdrant_storage.tar.gz

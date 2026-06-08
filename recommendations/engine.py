@@ -129,9 +129,7 @@ class RecommendationEngine:
         userlist_df_rows = userlist_df.to_dict(orient="records")
 
         if userlist_df_rows:
-            userlist_embeddings = np.array(
-                self.embedgen.embed_anime_rows(userlist_df_rows)
-            )
+            userlist_embeddings = self.qdrant_store.get_vectors(userlist_ids)
         else:
             embedding_size = self.embedgen.model.embedding_size
             userlist_embeddings = np.random.random((10, embedding_size))
@@ -214,7 +212,7 @@ class RecommendationEngine:
     def _rank(
         self, userlist: pd.DataFrame, candidate_set: list[tuple[AnimePayload, float]]
     ) -> list[AnimeRecommendation]:
-        ENABLE_GENRE_DIVERSITY = False
+        ENABLE_GENRE_DIVERSITY = True
 
         # feature weights
         WEIGHT_SIM = 1.0

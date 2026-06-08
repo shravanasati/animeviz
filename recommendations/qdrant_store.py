@@ -1,6 +1,7 @@
 import logging
 import os
 
+import numpy as np
 from qdrant_client import QdrantClient, models
 
 from recommendations.embed import EmbeddingGenerator
@@ -80,6 +81,19 @@ class QdrantStore:
             QDRANT_COLLECTION, points=points, wait=False, parallel=4
         )
 
+    def get_vectors(self, ids: list[int]) -> np.ndarray:
+        records = self.client.scroll(
+            QDRANT_COLLECTION,
+            with_payload=False,
+            with_vectors=True,
+            limit=len(ids),
+            scroll_filter=models.Filter(
+                must=models.FieldCondition(key="id", match=models.MatchAny(any=ids))
+            ),
+        )[0]
+
+        return np.array([np.array(r.vector) for r in records])
+
     def search_similar_anime(
         self,
         vector: list[float],
@@ -98,7 +112,11 @@ class QdrantStore:
 
         if disable_nsfw:
             for ng in NSFW_GENRES:
-                must_not_conditions.append(models.FieldCondition(key="genres", match=models.MatchPhrase(phrase=ng)))
+                must_not_conditions.append(
+                    models.FieldCondition(
+                        key="genres", match=models.MatchPhrase(phrase=ng)
+                    )
+                )
 
         return self.client.query_points(
             QDRANT_COLLECTION,
@@ -107,3 +125,8 @@ class QdrantStore:
             limit=limit,
             query_filter=models.Filter(must_not=must_not_conditions),
         )
+
+
+if __name__ == "__main__":
+    store = QdrantStore()
+    print(store.get_vectors([1])[0][0].vector)
