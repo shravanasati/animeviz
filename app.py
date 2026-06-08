@@ -420,9 +420,9 @@ def recommendations_page():
 @app.post("/recommendations")
 @limiter.limit("15/minute;1/sec")
 def recommend():
-    # if not turnstile.verify():
-    #     # print("cpatcha verification failed")
-    #     abort(401, "captcha")
+    if not turnstile.verify():
+        # print("cpatcha verification failed")
+        abort(401, "captcha")
 
     animelist_file = request.files.get("file")
     disable_nsfw = True
