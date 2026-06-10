@@ -418,7 +418,7 @@ def recommendations_page():
 
 
 @app.post("/recommendations")
-@limiter.limit("15/minute;1/sec")
+@limiter.limit("15/minute;1/second")
 def recommend():
     if not turnstile.verify():
         # print("cpatcha verification failed")
@@ -430,7 +430,7 @@ def recommend():
     if disable_nsfw_arg and disable_nsfw_arg == "false":
         disable_nsfw = False
 
-    opts = RecommendationOpts(disable_nsfw, "weighted", "all")
+    opts = RecommendationOpts(disable_nsfw, True)
 
     if animelist_file:
         try:

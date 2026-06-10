@@ -2,10 +2,12 @@ from collections import Counter
 from dataclasses import dataclass, asdict
 from datetime import date
 import math
-from typing import Literal, NamedTuple
+from typing import NamedTuple
 
 import numpy as np
 import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import normalize
 
 
 from recommendations.anime_store import AnimeStore
@@ -111,8 +113,7 @@ class AnimeRecommendation:
 @dataclass(frozen=True, slots=True)
 class RecommendationOpts:
     disable_nsfw: bool
-    average_algo: Literal["weighted"] | Literal["unweighted"] = "weighted"
-    ranking_features: Literal["all"] | Literal["score"] = "all"
+    clustering_enabled: bool = True
 
 
 class RecommendationEngine:
@@ -128,37 +129,67 @@ class RecommendationEngine:
         userlist_df = self.anime_store.df[self.anime_store.df["id"].isin(userlist_ids)]
         userlist_df_rows = userlist_df.to_dict(orient="records")
 
-        if userlist_df_rows:
-            userlist_embeddings = self.qdrant_store.get_vectors(userlist_ids)
-        else:
+        if not userlist_df_rows:
             embedding_size = self.embedgen.model.embedding_size
-            userlist_embeddings = np.random.random((10, embedding_size))
+            fallback_vector = np.random.random(embedding_size)
+            return [
+                (AnimePayload.from_dict(r.payload), r.score)
+                for r in self.qdrant_store.search_similar_anime(
+                    fallback_vector.tolist(),
+                    userlist_ids,
+                    CANDIDATE_SET_SIZE,
+                    opts.disable_nsfw,
+                ).points
+            ]
 
-        avg_func = (
-            self._average_vector_weighted
-            if opts.average_algo == "weighted"
-            else self._average_vector_unweighted
-        )
+        userlist_embeddings = self.qdrant_store.get_vectors(userlist_ids)
+        weights = self._calculate_user_weights(userlist)
+        valid_mask = weights > 0
+        clustering_embeddings = userlist_embeddings[valid_mask]
+        clustering_weights = weights[valid_mask]
 
-        avg_vector = avg_func(userlist_embeddings, userlist)
+        if len(clustering_embeddings) == 0:
+            clustering_embeddings = userlist_embeddings
+            clustering_weights = np.ones(len(userlist_embeddings))
 
-        return [
-            (AnimePayload.from_dict(r.payload), r.score)
-            for r in self.qdrant_store.search_similar_anime(
-                avg_vector.tolist(), userlist_ids, CANDIDATE_SET_SIZE, opts.disable_nsfw
-            ).points
-        ]
+        
+        normalized_embeddings = normalize(clustering_embeddings, norm="l2")
+        k = max(1, min(4, len(normalized_embeddings) // 8))
+        kmeans = KMeans(k, n_init=10, init="k-means++")
+        cluster_labels = kmeans.fit_predict(normalized_embeddings)
+        cluster_centroids = []
+        for i in range(k):
+            cluster_mask = cluster_labels == i
+            cluster_embeds = clustering_embeddings[cluster_mask]
+            cluster_w = clustering_weights[cluster_mask]
+
+            # Normalize internal weights for this specific cluster partition
+            w_sum = cluster_w.sum()
+            if w_sum > 0:
+                cluster_w = cluster_w / w_sum
+            else:
+                cluster_w = np.ones(len(cluster_w)) / len(cluster_w)
+
+            # Compute specific local weighted centroid vector
+            weighted_centroid = np.average(cluster_embeds, weights=cluster_w, axis=0)
+            cluster_centroids.append(weighted_centroid)
+
+        candidate_pool = {}
+        limit_per_cluster = CANDIDATE_SET_SIZE // k + 1
+
+        for centroid in cluster_centroids:
+            search_response = self.qdrant_store.search_similar_anime(
+                centroid.tolist(), userlist_ids, limit_per_cluster, opts.disable_nsfw
+            )
+            for point in search_response.points:
+                anime_id = point.id
+                if anime_id not in candidate_pool or point.score > candidate_pool[anime_id][1]:
+                    candidate_pool[anime_id] = (AnimePayload.from_dict(point.payload), point.score)
+
+        return sorted(candidate_pool.values(), key=lambda x: x[1], reverse=True)
 
     @staticmethod
-    def _average_vector_unweighted(
-        userlist_embeddings: np.ndarray, userlist: pd.DataFrame
-    ):
-        return np.average(userlist_embeddings, axis=0)
-
-    @staticmethod
-    def _average_vector_weighted(
-        userlist_embeddings: np.ndarray, userlist: pd.DataFrame
-    ):
+    def _calculate_user_weights(userlist: pd.DataFrame):
         status_weights = {
             "Completed": 1.0,
             "Watching": 0.85,
@@ -191,23 +222,8 @@ class RecommendationEngine:
             * userlist["recency_weight"]
             * userlist["status_weight"]
         ).to_numpy()
-        weights /= weights.sum()
 
-        avg_vector = np.average(userlist_embeddings, weights=weights, axis=0)
-        return avg_vector
-
-    def _rank_naive(self, candidate_set: list[tuple[AnimePayload, float]]):
-        scored_set: list[tuple[float, AnimePayload]] = []
-        for candidate, _ in candidate_set:
-            score = (candidate.mean / 10) ** 2
-            scored_set.append((score, candidate))
-
-        return [
-            AnimeRecommendation(
-                mal_id=i[1].id, title=i[1].title, title_en=i[1].alt_title_en
-            )
-            for i in sorted(scored_set, reverse=True, key=lambda x: x[0])
-        ]
+        return weights
 
     def _rank(
         self, userlist: pd.DataFrame, candidate_set: list[tuple[AnimePayload, float]]
@@ -378,10 +394,7 @@ class RecommendationEngine:
     ) -> list[AnimeRecommendation]:
         userlist = self._prepare_userlist_df(userlist)
         candidate_set = self._retrieve(userlist, opts)
-        if opts.ranking_features == "all":
-            ranked = self._rank(userlist, candidate_set)
-        else:
-            ranked = self._rank_naive(candidate_set)
+        ranked = self._rank(userlist, candidate_set)
         return ranked[:NUM_RECOMMENDATIONS]
 
 

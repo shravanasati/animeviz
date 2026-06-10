@@ -104,10 +104,12 @@ class QdrantStore:
         """
         Searches the QDrant collection against the passed average `vector`.
         Returns `limit` results.
-        The `userlist_ids` are filtered.
+        The `userlist_ids` are filtered, along with titles not yet aired and media of type unknown, music, CM or PV.
         """
         must_not_conditions = [
-            models.FieldCondition(key="id", match=models.MatchAny(any=userlist_ids))
+            models.FieldCondition(key="id", match=models.MatchAny(any=userlist_ids)),
+            models.FieldCondition(key="media_type", match=models.MatchAny(any=["Unknown", "Music", "CM", "PV"])),
+            models.FieldCondition(key="status", match=models.MatchValue(value="Not yet aired")),
         ]
 
         if disable_nsfw:
