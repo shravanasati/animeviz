@@ -15,7 +15,7 @@ from recommendations.embed import EmbeddingGenerator
 from recommendations.qdrant_store import QdrantStore
 
 
-CANDIDATE_SET_SIZE = 200
+CANDIDATE_SET_SIZE = 300
 NUM_RECOMMENDATIONS = 20
 
 
@@ -48,6 +48,7 @@ class AnimePayload:
     rating: str
     related_anime: list[AnimeRelation]
     studios: list[str]
+    franchise_id: int
 
     @staticmethod
     def _parse_date(date_str: str):
@@ -97,6 +98,7 @@ class AnimePayload:
             related_anime=cls._parse_relations(
                 cls._parse_list(d["related_anime"], ";")
             ),
+            franchise_id=d["franchise_id"],
         )
 
 
@@ -152,7 +154,6 @@ class RecommendationEngine:
             clustering_embeddings = userlist_embeddings
             clustering_weights = np.ones(len(userlist_embeddings))
 
-        
         normalized_embeddings = normalize(clustering_embeddings, norm="l2")
         k = max(1, min(4, len(normalized_embeddings) // 8))
         kmeans = KMeans(k, n_init=10, init="k-means++")
@@ -183,8 +184,14 @@ class RecommendationEngine:
             )
             for point in search_response.points:
                 anime_id = point.id
-                if anime_id not in candidate_pool or point.score > candidate_pool[anime_id][1]:
-                    candidate_pool[anime_id] = (AnimePayload.from_dict(point.payload), point.score)
+                if (
+                    anime_id not in candidate_pool
+                    or point.score > candidate_pool[anime_id][1]
+                ):
+                    candidate_pool[anime_id] = (
+                        AnimePayload.from_dict(point.payload),
+                        point.score,
+                    )
 
         return sorted(candidate_pool.values(), key=lambda x: x[1], reverse=True)
 
@@ -229,6 +236,7 @@ class RecommendationEngine:
         self, userlist: pd.DataFrame, candidate_set: list[tuple[AnimePayload, float]]
     ) -> list[AnimeRecommendation]:
         ENABLE_GENRE_DIVERSITY = True
+        ENABLE_FRANCHISE_DIVERSITY = True
 
         # feature weights
         WEIGHT_SIM = 1.0
@@ -259,6 +267,7 @@ class RecommendationEngine:
                     "start_year": candidate.start_date.year
                     if candidate.start_date
                     else None,
+                    "franchise_id": candidate.franchise_id,
                     "related_ids": [r.id for r in candidate.related_anime],
                 }
             )
@@ -312,6 +321,7 @@ class RecommendationEngine:
         if ENABLE_GENRE_DIVERSITY:
             # diversity-aware greedy selection with genre-penalty
             genre_counts = Counter()
+            franchise_counts = Counter()
             selected: list[dict] = []
             remaining = feats.copy()
 
@@ -327,6 +337,10 @@ class RecommendationEngine:
                             multiplier = 0.8
                             break
 
+                    if ENABLE_FRANCHISE_DIVERSITY and f["franchise_id"]:
+                        if franchise_counts[f["franchise_id"]] >= 2:
+                            multiplier *= 0.45
+
                     adjusted = f["base_score"] * multiplier
                     if adjusted > best_score:
                         best_score = adjusted
@@ -339,6 +353,8 @@ class RecommendationEngine:
                 # update genre counts
                 for g in pick["candidate"].genres:
                     genre_counts[g] += 1
+                if ENABLE_FRANCHISE_DIVERSITY and pick["franchise_id"]:
+                    franchise_counts[pick["franchise_id"]] += 1
 
                 selected.append(pick)
         else:

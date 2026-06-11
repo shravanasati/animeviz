@@ -82,7 +82,7 @@ MAL_CLIENT_SECRET={client_secret}
 
 7. Cloudflare Turnstile setup.
 
-The website uses the Cloudflare [Turnstile](https://developers.cloudflare.com/turnstile/) captcha service to protect the visualization endpoint from bots.
+The website uses the Cloudflare [Turnstile](https://developers.cloudflare.com/turnstile/) captcha service to protect expensive endpoints from bots.
 
 Generate a site key and a secret key from the turnstile dashboard and put them in the credentials.env file.
 
