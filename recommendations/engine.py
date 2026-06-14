@@ -164,7 +164,7 @@ class RecommendationEngine:
             cluster_embeds = clustering_embeddings[cluster_mask]
             cluster_w = clustering_weights[cluster_mask]
 
-            # Normalize internal weights for this specific cluster partition
+            # normalize internal weights for this specific cluster partition
             w_sum = cluster_w.sum()
             if w_sum > 0:
                 cluster_w = cluster_w / w_sum
@@ -211,7 +211,7 @@ class RecommendationEngine:
         # using guassian decay for calculating recency weight
         reference_date = pd.to_datetime(pd.Timestamp.today())
         userlist["days_passed"] = userlist["my_date"]
-        half_life_days = 30.0
+        half_life_days = 90
         sigma = half_life_days / np.sqrt(2 * np.log(2))
         userlist["days_passed"] = (reference_date - userlist["my_date"]).dt.days
         userlist["recency_weight"] = np.exp(
@@ -221,7 +221,10 @@ class RecommendationEngine:
         userlist["progress_weight"] = userlist["my_watched_episodes"].div(
             userlist["series_episodes"]
         )
-        userlist.loc[~np.isfinite(userlist["progress_weight"]), "progress_weight"] = 0
+
+        #* 0.5 cuz progress weight is infinite only if series_episodes is 0
+        # number of episodes are zero if it is unknown
+        userlist.loc[~np.isfinite(userlist["progress_weight"]), "progress_weight"] = 0.5
 
         weights = (
             userlist["score_weight"]

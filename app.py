@@ -4,6 +4,7 @@ import os
 
 # from pathlib import Path
 import secrets
+import time
 import xml.etree.ElementTree as ET
 from datetime import timedelta
 from io import BytesIO
@@ -292,11 +293,9 @@ def fetch_mal_data(current_user):
             if issue_new_token(current_user):
                 continue
             else:
-                return {
-                    "success": False,
-                    "message": "Unable to authorize the user! Please logout and login once.",
-                    "results": [],
-                }
+                raise RuntimeError(
+                    "Unable to authorize the user! Please logout and login once."
+                )
 
         resp.raise_for_status()
         resp_json = resp.json()
@@ -306,6 +305,36 @@ def fetch_mal_data(current_user):
             animelist_url = resp_json["paging"]["next"]
 
     return data
+
+
+def build_userlist_df(animelist_file):
+    if animelist_file:
+        xml_buf = process_uploaded_xml(animelist_file.stream)
+        return pd.read_xml(xml_buf)
+
+    if not current_user.is_authenticated:
+        abort(401, "myanimelist")
+
+    data = fetch_mal_data(current_user)
+    return build_df_from_mal_api_data(data)
+
+
+def leave_one_out_hit_rate(userlist_df: pd.DataFrame, opts: RecommendationOpts):
+    eight_higher = userlist_df[userlist_df["my_score"] >= 8]["series_animedb_id"]
+    total = len(eight_higher)
+    if total == 0:
+        return {"hits": 0, "total": 0, "hit%": 0.0}
+
+    hits = 0
+    for anime_id in eight_higher:
+        held_out_userlist = userlist_df[
+            userlist_df["series_animedb_id"] != anime_id
+        ].copy()
+        recs = recommendation_engine.recommendations(held_out_userlist, opts)
+        if anime_id in [rec.mal_id for rec in recs]:
+            hits += 1
+
+    return {"hits": hits, "total": total, "hit%": (hits / total) * 100}
 
 
 @app.route("/logout")
@@ -339,77 +368,42 @@ def visualize():
     else:
         interactive_charts = interactive_charts == "true"
 
+    opts = VisualizationOptions(disable_nsfw, False, interactive_charts)
     animelist_file = request.files.get("file")
 
-    opts = VisualizationOptions(disable_nsfw, False, interactive_charts)
+    try:
+        # todo add a queued column in the database for every user
+        # for non-logged in users, hash the animelist file
+        userlist_df = build_userlist_df(animelist_file)
+        viz = Visualizer(userlist_df, opts)
+        results = viz.visualize_all()
+        summary = viz.get_summary()
+        results_json = [r.as_dict() for r in results]
+        del viz
+        return {
+            "success": True,
+            "message": "All visualizations drawn successfully.",
+            "results": results_json,
+            "summary": summary,
+        }
 
-    if animelist_file:
-        try:
-            # todo add a queued column in the database for every user
-            # for non-logged in users, hash the animelist file
+    except ET.ParseError:
+        return {
+            "success": False,
+            "message": "Unable to parse the animelist.xml file",
+            "results": [],
+        }
 
-            xml_buf = process_uploaded_xml(animelist_file.stream)
-            viz = Visualizer.from_xml(xml_buf, opts)
-            results = viz.visualize_all()
-            summary = viz.get_summary()
-            results_json = [r.as_dict() for r in results]
-            del viz
-            return {
-                "success": True,
-                "message": "All visualizations drawn successfully.",
-                "results": results_json,
-                "summary": summary,
-            }
+    except Exception as e:
+        logger.exception(e)
+        return {
+            "success": False,
+            "message": "An unknown error occured. Please try again later.",
+            "results": [],
+        }
 
-        except ET.ParseError:
-            return {
-                "success": False,
-                "message": "Unable to parse the animelist.xml file",
-                "results": [],
-            }
-
-        except Exception as e:
-            logger.exception(e)
-            return {
-                "success": False,
-                "message": "An unknown error occured. Please try again later.",
-                "results": [],
-            }
-
-        finally:
-            gc.collect()
-
-    else:
-        if not current_user.is_authenticated:
-            abort(401, "myanimelist")
-
-        try:
-            data = fetch_mal_data(current_user)
-            df = build_df_from_mal_api_data(data)
-            viz = Visualizer(df, opts)
-            results = viz.visualize_all()
-            summary = viz.get_summary()
-            results_json = [r.as_dict() for r in results]
-            del viz
-            return {
-                "success": True,
-                "message": "All visualizations drawn successfully.",
-                "results": results_json,
-                "summary": summary,
-            }
-
-        except Exception as e:
-            logger.error("cant get user animelist")
-            logger.exception(e)
-            return {
-                "success": False,
-                "message": "An unknown error occured. Please try again later.",
-                "results": [],
-            }
-
-        finally:
-            # todo fix memory leaks
-            gc.collect()
+    finally:
+        gc.collect()
 
 
 @app.get("/recommendations")
@@ -424,59 +418,80 @@ def recommend():
         # print("cpatcha verification failed")
         abort(401, "captcha")
 
-    animelist_file = request.files.get("file")
     disable_nsfw = True
     disable_nsfw_arg = request.args.get("disable_nsfw")
     if disable_nsfw_arg and disable_nsfw_arg == "false":
         disable_nsfw = False
 
     opts = RecommendationOpts(disable_nsfw, True)
+    animelist_file = request.files.get("file")
 
-    if animelist_file:
-        try:
-            xml_buf = process_uploaded_xml(animelist_file.stream)
-            userlist_df = pd.read_xml(xml_buf)
-            recs = recommendation_engine.recommendations(userlist_df, opts)
-            return {
-                "success": True,
-                "message": "Recommendations generated successfully.",
-                "results": [rec.to_dict() for rec in recs],
-            }
+    try:
+        userlist_df = build_userlist_df(animelist_file)
+        init = time.perf_counter()
+        recs = recommendation_engine.recommendations(userlist_df, opts)
+        end = time.perf_counter()
+        print(end - init)
+        return {
+            "success": True,
+            "message": "Recommendations generated successfully.",
+            "results": [rec.to_dict() for rec in recs],
+        }
 
-        except ET.ParseError:
-            return {
-                "success": False,
-                "message": "Unable to parse the animelist.xml file",
-                "results": [],
-            }
+    except ET.ParseError:
+        return {
+            "success": False,
+            "message": "Unable to parse the animelist.xml file",
+            "results": [],
+        }
 
-        except Exception as e:
-            logger.exception(e)
-            return {
-                "success": False,
-                "message": "An unknown error occured. Please try again later.",
-                "results": [],
-            }
+    except Exception as e:
+        logger.error("cant get user animelist")
+        logger.exception(e)
+        return {
+            "success": False,
+            "message": "An unknown error occured. Please try again later.",
+            "results": [],
+        }
 
-    else:
-        if not current_user.is_authenticated:
-            abort(401, "myanimelist")
 
-        try:
-            data = fetch_mal_data(current_user)
-            userlist_df = build_df_from_mal_api_data(data)
-            recs = recommendation_engine.recommendations(userlist_df, opts)
-            return {
-                "success": True,
-                "message": "Recommendations generated successfully.",
-                "results": [rec.to_dict() for rec in recs],
-            }
+@app.post("/evaluate-recommendations")
+@limiter.limit("15/minute;1/second")
+def evaluate():
+    # if not turnstile.verify():
+    #     # print("cpatcha verification failed")
+    #     abort(401, "captcha")
 
-        except Exception as e:
-            logger.error("cant get user animelist")
-            logger.exception(e)
-            return {
-                "success": False,
-                "message": "An unknown error occured. Please try again later.",
-                "results": [],
-            }
+    disable_nsfw = True
+    disable_nsfw_arg = request.args.get("disable_nsfw")
+    if disable_nsfw_arg and disable_nsfw_arg == "false":
+        disable_nsfw = False
+
+    opts = RecommendationOpts(disable_nsfw, True)
+    animelist_file = request.files.get("file")
+
+    try:
+        userlist_df = build_userlist_df(animelist_file)
+        results = leave_one_out_hit_rate(userlist_df, opts)
+
+        return {
+            "success": True,
+            "message": "Recommendations generated successfully.",
+            "results": results,
+        }
+
+    except ET.ParseError:
+        return {
+            "success": False,
+            "message": "Unable to parse the animelist.xml file",
+            "results": [],
+        }
+
+    except Exception as e:
+        logger.error("cant get user animelist")
+        logger.exception(e)
+        return {
+            "success": False,
+            "message": "An unknown error occured. Please try again later.",
+            "results": [],
+        }
