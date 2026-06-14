@@ -1,4 +1,15 @@
 services:
+  mysql:
+    image: mysql:8
+    env_file:
+      - credentials.env
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app-network
+
   qdrant:
     image: qdrant/qdrant:v1.18
     ports:
@@ -9,10 +20,10 @@ services:
     networks:
       - app-network
 
-
 networks:
   app-network:
     driver: bridge
 
 volumes:
+  mysql_data:
   qdrant_storage:

@@ -5,7 +5,7 @@ This is the repository for the website [animeviz](https://animeviz.ninja).
 
 ### Setting up the development environment
 
-1. Install [python](https://python.org), [poetry](https://python-poetry.org/), [mysql](https://www.mysql.com/products/community/) (make sure `mysql` is on PATH) and (optionally) [stella](https://github.com/shravanasati/stellapy) on your system.
+1. Install [python](https://python.org), [uv](https://docs.astral.sh/uv/), [docker](https://www.docker.com/) and (optionally) [stella](https://github.com/shravanasati/stellapy) on your system.
 
 2. Clone the repository (fork first if you want to contribute).
 
@@ -15,59 +15,39 @@ git clone https://github.com/shravanasati/animeviz.git
 
 Change the github username in the above URL if you have forked the repository.
 
-3. Create a virtual environment (strongly recommended). 
+3. Install all the dependencies.
 
 ```sh
-python -m venv venv
+uv sync
 ```
 
-And activate it.
+4. Setup the database.
 
-On Windows powershell
-```powershell
-./venv/Scripts/Activate.ps1
-```
-
-On unix based systems
-```sh
-source ./venv/bin/activate
-```
-
-4. Install all the dependencies.
+Start the MySQL and Qdrant services using Docker:
 
 ```sh
-poetry install --no-root
+docker compose up -d mysql qdrant
 ```
 
-5. Setup the database.
-
-Login into MySQL using the command:
-```sh
-mysql -u {username} -p
-```
-
-Create the `animeviz` database:
-```sh
-create database animeviz;
-```
-
-Now, go the project base and add a file named with `credentials.env` with the following content:
+Create a `credentials.env` file in the project root with the following content:
 
 ```
-MYSQL_USERNAME={username}
-MYSQL_PASSWORD={password}
-MYSQL_HOST=localhost
+MYSQL_ROOT_PASSWORD=rootpassword
+MYSQL_DATABASE=animeviz
+MYSQL_USERNAME=root
+MYSQL_PASSWORD=rootpassword
+MYSQL_HOST=mysql
 MYSQL_PORT=3306
 DB_POOL_SIZE=50
 DB_POOL_RECYCLE=1800
 ```
 
-The host and port arguments here are the default ones. If your MySQL server runs on a different host and port, modify them accordingly. The `DB_POOL_SIZE` indicates the size of connection pool used my SQLAlchemy. The `DB_POOL_RECYCLE` value indicates the duration in seconds after which the connection should be recycled
+The Docker MySQL service picks up `MYSQL_ROOT_PASSWORD` and `MYSQL_DATABASE` from `credentials.env` and automatically creates the `animeviz` database on first startup. Make sure `MYSQL_HOST` is set to `mysql` (the Docker service name) and `MYSQL_USERNAME` is `root`.
 
-(don't include curly braces in the file)
+(Don't include curly braces in the file)
 
 
-6. MAL setup.
+5. MAL setup.
 
 It is quite lengthy, read the [mal_setup.md](./mal_setup.md) file for more information.
 
@@ -80,7 +60,7 @@ MAL_CLIENT_SECRET={client_secret}
 
 (again DO NOT include curly braces)
 
-7. Cloudflare Turnstile setup.
+6. Cloudflare Turnstile setup.
 
 The website uses the Cloudflare [Turnstile](https://developers.cloudflare.com/turnstile/) captcha service to protect expensive endpoints from bots.
 
@@ -93,7 +73,7 @@ TURNSTILE_SECRET_KEY={secretkey}
 
 Along with that you'd also need to change the [`form.js`](./static/scripts/form.js) file and change the site key in the `window.onloadTurnstileCallback` function.
 
-8. More configurations.
+7. More configurations.
 
 Another configuration you'd need to be able to run the server is `SECRET_KEY`, which is used by login manager to keep client-side sessions secure.
 
@@ -124,10 +104,10 @@ The `PROD` variable indicates if the website is running on a production server, 
 
 `MAX_ANIME_SEARCH_THREADS` is the number of threads the application will spawn when searching genres of anime from the data. 
 
-9. Run the server.
+8. Run the server.
 
 ```sh
-flask --app app run
+uv run flask --app app run
 ```
 
 If you've installed stella, you can get live reloading capabilities for both backend and frontend.
@@ -141,6 +121,17 @@ for just running the server.
 stella run
 ```
 for running the server as well as having reload on browser.
+
+
+### Generating recommendations
+
+If you want to generate anime recommendations for users, you need to seed the Qdrant database by running the seeder script:
+
+```sh
+uv run python -m recommendations.seeder
+```
+
+Make sure the Qdrant service is running (`docker compose up -d qdrant`) before executing this.
 
 
 ### Deployment Guide
